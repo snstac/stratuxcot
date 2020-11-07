@@ -41,7 +41,7 @@ async def main(opts):
             event_queue, cot_url.geturl(), opts.fts_token)
     elif "tcp" in cot_url.scheme:
         host, port = pytak.parse_cot_url(cot_url)
-        _, writer = await asyncio.open_connection(cot_host, cot_port)
+        _, writer = await asyncio.open_connection(host, port)
         eventworker = pytak.EventWorker(event_queue, writer)
     elif "udp" in cot_url.scheme:
         writer = await pytak.udp_client(cot_url)

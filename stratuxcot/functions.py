@@ -138,7 +138,7 @@ def stratux_to_cot(msg: dict, cot_type: str = None, # NOQA pylint: disable=too-m
 
     # Figure out appropriate CoT Type:
     emitter_category = msg.get("Emitter_category")
-    cot_type = faa_to_cot_type(emitter_category)
+    cot_type = faa_to_cot_type(emitter_category, flight, icao_hex)
 
     point = pycot.Point()
     point.lat = lat
