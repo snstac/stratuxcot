@@ -14,6 +14,7 @@ import pytak
 
 import stratuxcot
 
+# Python 3.6 support:
 if sys.version_info[:2] >= (3, 7):
     from asyncio import get_running_loop
 else:
@@ -39,13 +40,11 @@ async def main(opts):
         eventworker = pytak.FTSClient(
             event_queue, cot_url.geturl(), opts.fts_token)
     elif "tcp" in cot_url.scheme:
-        if ":" in cot_url.path:
-            cot_host, cot_port = str(cot_url.path).split(":")
-        else:
-            cot_host = cot_url.path
-            cot_port = pytak.DEFAULT_COT_PORT
-
+        host, port = pytak.parse_cot_url(cot_url)
         _, writer = await asyncio.open_connection(cot_host, cot_port)
+        eventworker = pytak.EventWorker(event_queue, writer)
+    elif "udp" in cot_url.scheme:
+        writer = await pytak.udp_client(cot_url)
         eventworker = pytak.EventWorker(event_queue, writer)
 
     # Stratux Receiver

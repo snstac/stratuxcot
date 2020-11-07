@@ -110,51 +110,50 @@ __license__ = 'Apache License, Version 2.0'
 # //FIXME: Rename variables for consistency, especially "Last_".
 #
 
-def icao_hex(addr) -> str:
-    return str(hex(addr)).lstrip('0x')
+def icao_int_to_hex(addr) -> str:
+    return str(hex(addr)).lstrip('0x').upper()
 
 
 def stratux_to_cot(msg: dict, cot_type: str = None, # NOQA pylint: disable=too-many-locals
                    stale: int = None) -> pycot.Event:
     """
-    Transforms a Stratux to a Cursor-on-Target PLI.
+    Transforms Stratux Websocket Messages to a Cursor-on-Target PLI Events.
     """
     time = datetime.datetime.now(datetime.timezone.utc)
-    cot_type = cot_type or stratuxcot.constants.DEFAULT_TYPE
     stale = stale or stratuxcot.constants.DEFAULT_STALE
 
-    lat = msg.get('Lat')
-    lon = msg.get('Lng')
+    lat = msg.get("Lat")
+    lon = msg.get("Lng")
     if lat is None or lon is None:
         return None
 
-    c_hex = icao_hex(msg.get('Icao_addr'))
-    name = f"ICAO24.{c_hex}"
+    icao_hex = icao_int_to_hex(msg.get('Icao_addr'))
+    name = f"ICAO-{icao_hex}"
+
     flight = msg.get('Tail', '').strip()
     if flight:
         callsign = flight
     else:
-        callsign = c_hex
+        callsign = icao_hex
 
     # Figure out appropriate CoT Type:
     emitter_category = msg.get("Emitter_category")
-    if emitter_category == 17 or emitter_category == 18:
-        cot_type = 'a-n-G-E-V-C'  # non-FVEY: a-u-G-E-V-C
-    if emitter_category == 19:
-        cot_type = 'a-n-G-I-U-T-com-tow'
+    cot_type = faa_to_cot_type(emitter_category)
 
     point = pycot.Point()
     point.lat = lat
     point.lon = lon
-    point.ce = msg.get("NACp", "9999999.0")
-    point.le = msg.get("NACp", "9999999.0")
 
     if msg.get("OnGround"):
         point.hae = "9999999.0"
+        point.ce = 51.56 + int(msg.get("NACp"))
+        point.le = 12.5 + int(msg.get("NACp"))
     else:
-        alt_geom = int(msg.get("Alt", 0))
-        if alt_geom:
-            point.hae = alt_geom * 0.3048
+        point.ce = 56.57 + int(msg.get("NACp"))
+        point.le = 12.5 + int(msg.get("NACp"))
+        alt = int(msg.get("Alt", 0))
+        if alt:
+            point.hae = alt * 0.3048
         else:
             point.hae = "9999999.0"
 
@@ -178,28 +177,27 @@ def stratux_to_cot(msg: dict, cot_type: str = None, # NOQA pylint: disable=too-m
         track.speed = '9999999.0'
 
     remarks = pycot.Remarks()
-    _remark = (f"ICAO24: {c_hex} Mode3 Squawk: {msg.get('Squawk')} "
-               f"SignalLevel: {msg.get('SignalLevel')}")
+    _remarks = f"Mode3A Squawk: {msg.get('Squawk')}"
     if flight:
-        remarks.value = f"Flight: {flight} " + _remark
+        remarks.value = f"{icao_hex}({flight}) {_remarks}"
     else:
-        remarks.value = _remark
-
+        remarks.value = f"{icao_hex} {_remarks}"
+#
     detail = pycot.Detail()
     detail.uid = uid
     detail.contact = contact
     detail.track = track
-    # Not supported by FTS 1.1?
-    # detail.remarks = remarks
+    # "remarks" is not supported by FTS 1.1?
+    detail.remarks = remarks
 
     event = pycot.Event()
-    event.version = '2.0'
+    event.version = "2.0"
     event.event_type = cot_type
     event.uid = name
     event.time = time
     event.start = time
     event.stale = time + datetime.timedelta(seconds=stale)
-    event.how = 'm-g'
+    event.how = "m-g"
     event.point = point
     event.detail = detail
 
