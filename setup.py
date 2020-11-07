@@ -48,7 +48,7 @@ setuptools.setup(
     include_package_data=True,
     install_requires=[
         'pycot >= 2.5.0',
-        'pytak >= 2.1.0',
+        'pytak >= 2.2.0',
         'websockets'
     ],
     classifiers=[

@@ -56,6 +56,15 @@ __license__ = 'Apache License, Version 2.0'
 #  }
 #
 
+#
+# "Last_seen":"0001-01-01T00:43:19.61Z"  (ws://192.168.10.1/traffic)   0001-01-01 is day zero,
+# +
+# "GPSTime":"2020-05-12T08:27:10Z" (http://192.168.10.1/getSituation)
+# -
+# ("Uptime":2610230,ms)"UptimeClock":"0001-01-01T00:43:30.23Z" (http://192.168.10.1/getStatus)
+# = Timestamp of traffic "event"
+#
+
 def icao_hex(addr) -> str:
     return str(hex(addr)).lstrip('0x')
 
