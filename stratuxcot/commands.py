@@ -3,7 +3,6 @@
 
 """Stratux Cursor-on-Target Gateway Commands."""
 
-import aiohttp
 import argparse
 import asyncio
 import concurrent

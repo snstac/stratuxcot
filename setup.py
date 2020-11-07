@@ -13,7 +13,7 @@ import sys
 import setuptools
 
 __title__ = 'stratuxcot'
-__version__ = '1.0.0b1'
+__version__ = '1.0.0b2'
 __author__ = 'Greg Albrecht W2GMD <oss@undef.net>'
 __copyright__ = 'Copyright 2020 Orion Labs, Inc.'
 __license__ = 'Apache License, Version 2.0'
@@ -48,7 +48,7 @@ setuptools.setup(
     include_package_data=True,
     install_requires=[
         'pycot >= 2.5.0',
-        'pytak >= 2.2.0',
+        'pytak >= 2.2.1',
         'websockets'
     ],
     classifiers=[
