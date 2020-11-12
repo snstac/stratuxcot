@@ -13,13 +13,9 @@ Android Team Awareness Kit (ATAK), WinTAK, RaptorX, et al.
 
 Stratux messages are received via the /traffic Websocket.
 
-CoT PLIs can be transmitted to SA clients using:
-
-A. TCP Unicast to a specified host:port.
-B. [COMING SOON] UDP Broadcast to a specified broadcast host:port or multicast host:port.
-C. [COMING SOON] FreeTAKServer REST API.
-
 For more information on the TAK suite of tools, see: https://www.civtak.org/
+
+For more information on the Stratux Portable ADS-B receiver, see: http://stratux.me/
 
 Installation
 ============
@@ -55,7 +51,7 @@ The `stratuxcot` command-line program has several runtime arguments::
       -W STRATUX_WS, --stratux_ws STRATUX_WS
                             Stratux Websocket URL.
       -S COT_STALE, --cot_stale COT_STALE
-                            CoT Stale period, in seconds
+                            CoT Stale period, in seconds.
       -K FTS_TOKEN, --fts_token FTS_TOKEN
                             FTS REST API Token
 

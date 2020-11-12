@@ -12,11 +12,11 @@ import sys
 
 import setuptools
 
-__title__ = 'stratuxcot'
-__version__ = '1.0.0b3'
-__author__ = 'Greg Albrecht W2GMD <oss@undef.net>'
-__copyright__ = 'Copyright 2020 Orion Labs, Inc.'
-__license__ = 'Apache License, Version 2.0'
+__title__ = "stratuxcot"
+__version__ = "1.0.0b4"
+__author__ = "Greg Albrecht W2GMD <oss@undef.net>"
+__copyright__ = "Copyright 2020 Orion Labs, Inc."
+__license__ = "Apache License, Version 2.0"
 
 
 def publish():
@@ -35,10 +35,10 @@ setuptools.setup(
     name=__title__,
     packages=[__title__],
     package_dir={__title__: __title__},
-    url=f'https://github.com/ampledata/{__title__}',
-    description='Stratux Cursor-on-Target Gateway.',
-    author='Greg Albrecht',
-    author_email='oss@undef.net',
+    url=f"https://github.com/ampledata/{__title__}",
+    description="Stratux Cursor-on-Target Gateway.",
+    author="Greg Albrecht",
+    author_email="oss@undef.net",
     package_data={'': ['LICENSE']},
     license=open('LICENSE').read(),
     long_description=open('README.rst').read(),
@@ -57,5 +57,5 @@ setuptools.setup(
     keywords=[
         'ADS-B', 'ADSB', 'Cursor on Target', 'ATAK', 'TAK', 'CoT'
     ],
-    entry_points={'console_scripts': ['stratuxcot = stratuxcot.commands:cli']}
+    entry_points={"console_scripts": ["stratuxcot = stratuxcot.commands:cli"]}
 )

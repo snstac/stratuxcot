@@ -42,7 +42,7 @@ class StratuxWorker(pytak.MessageWorker):
 
         icao = stratuxcot.icao_int_to_hex(msg.get("Icao_addr"))
         self._logger.debug(
-            "Handling ICAO24: %s Flight: %s ", icao, msg.get("Tail"))
+            "Handling ICAO: %s Flight: %s ", icao, msg.get("Tail"))
 
         await self._put_event_queue(event)
 
