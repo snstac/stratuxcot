@@ -15,12 +15,12 @@ Stratux Cursor-on-Target Gateway.
 
 """
 
-from .constants import (LOG_FORMAT, LOG_LEVEL, DEFAULT_STALE, DEFAULT_TYPE)  # NOQA
+from .constants import LOG_FORMAT, LOG_LEVEL, DEFAULT_STALE  # NOQA
 
 from .functions import stratux_to_cot, hello_event, icao_int_to_hex  # NOQA
 
 from .classes import StratuxWorker  # NOQA
 
-__author__ = 'Greg Albrecht W2GMD <oss@undef.net>'
-__copyright__ = 'Copyright 2020 Orion Labs, Inc.'
-__license__ = 'Apache License, Version 2.0'
+__author__ = "Greg Albrecht W2GMD <oss@undef.net>"
+__copyright__ = "Copyright 2020 Orion Labs, Inc."
+__license__ = "Apache License, Version 2.0"

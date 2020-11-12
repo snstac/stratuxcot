@@ -20,9 +20,9 @@ if sys.version_info[:2] >= (3, 7):
 else:
     from asyncio import _get_running_loop as get_running_loop
 
-__author__ = 'Greg Albrecht W2GMD <oss@undef.net>'
-__copyright__ = 'Copyright 2020 Orion Labs, Inc.'
-__license__ = 'Apache License, Version 2.0'
+__author__ = "Greg Albrecht W2GMD <oss@undef.net>"
+__copyright__ = "Copyright 2020 Orion Labs, Inc."
+__license__ = "Apache License, Version 2.0"
 
 
 async def main(opts):
@@ -35,19 +35,9 @@ async def main(opts):
         opts.stratux_ws)
     cot_url: urllib.parse.ParseResult = urllib.parse.urlparse(opts.cot_url)
 
-    # CoT/TAK Event Workers (transmitters):
-    if "http" in cot_url.scheme:
-        eventworker = pytak.FTSClient(
-            event_queue, cot_url.geturl(), opts.fts_token)
-    elif "tcp" in cot_url.scheme:
-        host, port = pytak.parse_cot_url(cot_url)
-        _, writer = await asyncio.open_connection(host, port)
-        eventworker = pytak.EventWorker(event_queue, writer)
-    elif "udp" in cot_url.scheme:
-        writer = await pytak.udp_client(cot_url)
-        eventworker = pytak.EventWorker(event_queue, writer)
+    eventworker = await pytak.eventworker_factory(
+        cot_url, event_queue, opts.fts_token)
 
-    # Stratux Receiver
     stratuxworker = stratuxcot.StratuxWorker(
         event_queue=event_queue,
         url=stratux_ws,

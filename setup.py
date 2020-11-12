@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Setup for the ADS-B Cursor-on-Target Gateway.
+Setup for the Stratux Cursor-on-Target Gateway.
 
 Source:: https://github.com/ampledata/stratuxcot
 """
@@ -13,7 +13,7 @@ import sys
 import setuptools
 
 __title__ = 'stratuxcot'
-__version__ = '1.0.0b2'
+__version__ = '1.0.0b3'
 __author__ = 'Greg Albrecht W2GMD <oss@undef.net>'
 __copyright__ = 'Copyright 2020 Orion Labs, Inc.'
 __license__ = 'Apache License, Version 2.0'
@@ -29,9 +29,7 @@ def publish():
 
 publish()
 
-extras = {
-   'with_simplejson': ['simplejson>=3.5.3']
-}
+
 setuptools.setup(
     version=__version__,
     name=__title__,

@@ -9,9 +9,9 @@ import pycot
 
 import stratuxcot.constants
 
-__author__ = 'Greg Albrecht W2GMD <oss@undef.net>'
-__copyright__ = 'Copyright 2020 Orion Labs, Inc.'
-__license__ = 'Apache License, Version 2.0'
+__author__ = "Greg Albrecht W2GMD <oss@undef.net>"
+__copyright__ = "Copyright 2020 Orion Labs, Inc."
+__license__ = "Apache License, Version 2.0"
 
 
 #
@@ -115,7 +115,7 @@ def icao_int_to_hex(addr) -> str:
 
 
 def stratux_to_cot(msg: dict, cot_type: str = None, # NOQA pylint: disable=too-many-locals
-                   stale: int = None) -> pycot.Event:
+                   stale: int = None, classifier: any = None) -> pycot.Event:
     """
     Transforms Stratux Websocket Messages to a Cursor-on-Target PLI Events.
     """
@@ -138,7 +138,7 @@ def stratux_to_cot(msg: dict, cot_type: str = None, # NOQA pylint: disable=too-m
 
     # Figure out appropriate CoT Type:
     emitter_category = msg.get("Emitter_category")
-    cot_type = faa_to_cot_type(icao_hex, emitter_category, flight)
+    cot_type = classifier(icao_hex, emitter_category, flight)
 
     point = pycot.Point()
     point.lat = lat
