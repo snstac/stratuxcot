@@ -33,7 +33,7 @@ class StratuxWorker(pytak.MessageWorker):
         event: pycot.Event = self.cot_renderer(
             msg,
             stale=self.cot_stale,
-            classifier=cot_classifier
+            classifier=self.cot_classifier
         )
 
         if not event:
