@@ -40,9 +40,9 @@ async def main(opts):
 
     message_worker = stratuxcot.StratuxWorker(
         event_queue=tx_queue,
-        url=stratux_ws,
         cot_stale=opts.cot_stale
     )
+    message_worker.url = stratux_ws
 
     await tx_queue.put(stratuxcot.hello_event())
 
