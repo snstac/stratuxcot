@@ -114,13 +114,13 @@ def icao_int_to_hex(addr) -> str:
     return str(hex(addr)).lstrip('0x').upper()
 
 
-def stratux_to_cot(msg: dict, cot_type: str = None, # NOQA pylint: disable=too-many-locals
-                   stale: int = None, classifier: any = None) -> pycot.Event:
+def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many-locals
+                   classifier: any = None) -> pycot.Event:
     """
     Transforms Stratux Websocket Messages to a Cursor-on-Target PLI Events.
     """
     time = datetime.datetime.now(datetime.timezone.utc)
-    stale = stale or stratuxcot.constants.DEFAULT_STALE
+    stale = stale or stratuxcot.DEFAULT_EVENT_STALE
 
     lat = msg.get("Lat")
     lon = msg.get("Lng")

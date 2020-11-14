@@ -25,11 +25,15 @@ __license__ = "Apache License, Version 2.0"
 
 class StratuxWorker(pytak.MessageWorker):
 
-    cot_renderer = stratuxcot.stratux_to_cot
-    cot_classifier = pytak.faa_to_cot_type
+    def __init__(self, event_queue, cot_stale):
+        super().__init__(event_queue)
+        self.cot_stale = cot_stale
+        self.cot_renderer = stratuxcot.stratux_to_cot
+        self.cot_classifier = pytak.faa_to_cot_type
 
     async def handle_message(self, msg: dict) -> None:
         """Processes Stratux Message"""
+
         event: pycot.Event = self.cot_renderer(
             msg,
             stale=self.cot_stale,

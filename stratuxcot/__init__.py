@@ -15,7 +15,7 @@ Stratux Cursor-on-Target Gateway.
 
 """
 
-from .constants import LOG_FORMAT, LOG_LEVEL, DEFAULT_STALE  # NOQA
+from .constants import LOG_FORMAT, LOG_LEVEL, DEFAULT_EVENT_STALE  # NOQA
 
 from .functions import stratux_to_cot, hello_event, icao_int_to_hex  # NOQA
 

@@ -22,4 +22,4 @@ else:
     LOG_FORMAT = logging.Formatter(
         ('%(asctime)s stratuxcot %(levelname)s - %(message)s'))
 
-DEFAULT_STALE: int = 120
+DEFAULT_EVENT_STALE: int = 120
