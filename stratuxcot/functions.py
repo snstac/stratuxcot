@@ -210,8 +210,8 @@ def hello_event():
     callsign = 'stratuxcot'
 
     point = pycot.Point()
-    point.lat = 0.0
-    point.lon = 0.0
+    point.lat = '9999999.0'
+    point.lon = '9999999.0'
 
     # FIXME: These values are static, should be dynamic.
     point.ce = '9999999.0'

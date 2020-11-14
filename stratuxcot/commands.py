@@ -26,29 +26,29 @@ __license__ = "Apache License, Version 2.0"
 
 
 async def main(opts):
-    loop = get_running_loop()
-
-    tasks: set = set()
-    event_queue: asyncio.Queue = asyncio.Queue(loop=loop)
+    loop = asyncio.get_running_loop()
+    tx_queue: asyncio.Queue = asyncio.Queue()
+    rx_queue: asyncio.Queue = asyncio.Queue()
+    cot_url: urllib.parse.ParseResult = urllib.parse.urlparse(opts.cot_url)
+    # Create our CoT Event Queue Worker
+    reader, writer = await pytak.protocol_factory(cot_url)
+    write_worker = pytak.EventTransmitter(tx_queue, writer)
+    read_worker = pytak.EventReceiver(rx_queue, reader)
 
     stratux_ws: urllib.parse.ParseResult = urllib.parse.urlparse(
         opts.stratux_ws)
-    cot_url: urllib.parse.ParseResult = urllib.parse.urlparse(opts.cot_url)
 
-    eventworker = await pytak.eventworker_factory(
-        cot_url, event_queue, opts.fts_token)
-
-    stratuxworker = stratuxcot.StratuxWorker(
+    message_worker = stratuxcot.StratuxWorker(
         event_queue=event_queue,
         url=stratux_ws,
         cot_stale=opts.cot_stale
     )
 
-    tasks.add(asyncio.ensure_future(eventworker.run()))
-    tasks.add(asyncio.ensure_future(stratuxworker.run()))
+    await tx_queue.put(stratuxcot.hello_event())
 
     done, pending = await asyncio.wait(
-        tasks, return_when=asyncio.FIRST_COMPLETED)
+        set([message_worker.run(), read_worker.run(), write_worker.run()]),
+        return_when=asyncio.FIRST_COMPLETED)
 
     for task in done:
         print(f"Task completed: {task}")
