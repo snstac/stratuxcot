@@ -4,6 +4,7 @@
 """Stratux Cursor-on-Target Gateway Functions."""
 
 import datetime
+import os
 
 import pycot
 
@@ -177,17 +178,21 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
         track.speed = '9999999.0'
 
     remarks = pycot.Remarks()
-    _remarks = f"Mode3A Squawk: {msg.get('Squawk')}"
+    _remarks = f"Squawk: {msg.get('Squawk')} Category: {emitter_category}"
     if flight:
-        remarks.value = f"{icao_hex}({flight}) {_remarks}"
+        _remarks = f"{icao_hex}({flight}) {_remarks}"
     else:
-        remarks.value = f"{icao_hex} {_remarks}"
-#
+        _remarks = f"{icao_hex} {_remarks}"
+
+    if bool(os.environ.get('DEBUG')):
+        _remarks = f"{_remarks} via stratuxcot"
+
+    remarks.value = _remarks
+
     detail = pycot.Detail()
     detail.uid = uid
     detail.contact = contact
     detail.track = track
-    # "remarks" is not supported by FTS 1.1?
     detail.remarks = remarks
 
     event = pycot.Event()
