@@ -64,7 +64,7 @@ def cli():
         required=True
     )
     parser.add_argument(
-        '-W', '--stratux_ws', help='Stratux Websocket URL.',
+        '-W', '--stratux_ws', help='Stratux Websocket URL.',  # update so only ip address of StratuX is required if standard url format ws://192.168.10.1/traffic --> ws://{ip.address}/traffic
         required=True
     )
 
