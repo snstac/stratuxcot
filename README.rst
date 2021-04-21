@@ -91,7 +91,7 @@ Examples
 Connect to the Stratux device at ws://172.17.2.188/traffic, and forward CoT to
 TCP Port 8087 on Host 172.17.2.152::
 
-    $ stratuxcot -U tcp:172.17.2.152:8087 -W ws://172.17.2.188/traffic
+    $ stratuxcot -U tcp:172.17.2.152:8087 -W 172.17.2.188
 
 
 Running as a Daemon
