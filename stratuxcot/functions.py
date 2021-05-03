@@ -242,7 +242,7 @@ def hello_event():
 
     event = pycot.Event()
     event.version = '2.0'
-    event.event_type = 'a-u-G'  # can make a non-visible (not on map) by adding "y-" to leading digits of cot type
+    event.event_type = 'y-a-u-G'  # can make a non-visible (not on map) by adding "y-" to leading digits of cot type
     event.uid = name
     event.time = time
     event.start = time
