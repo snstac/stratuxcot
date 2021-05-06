@@ -5,8 +5,9 @@
 
 import datetime
 import os
-
 import xml.etree.ElementTree
+
+import pytak
 
 import stratuxcot.constants
 
@@ -191,8 +192,8 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
     if bool(os.getenv("DEBUG")):
         _remarks = f"{_remarks} via stratuxcot"
 
-    detail.set("remarks", _remark)
-    remarks.text = _remark
+    detail.set("remarks", _remarks)
+    remarks.text = _remarks
     detail.append(remarks)
 
     root = xml.etree.ElementTree.Element("event")
