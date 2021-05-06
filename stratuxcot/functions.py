@@ -170,7 +170,7 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
     # gs: ground speed in knots
     gs = int(msg.get('Speed', 0))
     if gs:
-        track.set("speed", str(sgs * 0.514444))
+        track.set("speed", str(gs * 0.514444))
     else:
         track.set("speed", "9999999.0")
 
