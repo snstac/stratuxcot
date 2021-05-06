@@ -7,11 +7,11 @@ import logging
 import os
 
 __author__ = "Greg Albrecht W2GMD <oss@undef.net>"
-__copyright__ = "Copyright 2020 Orion Labs, Inc."
+__copyright__ = "Copyright 2021 Orion Labs, Inc."
 __license__ = "Apache License, Version 2.0"
 
 
-if bool(os.environ.get('DEBUG')):
+if bool(os.getenv("DEBUG")):
     LOG_LEVEL = logging.DEBUG
     LOG_FORMAT = logging.Formatter(
         ('%(asctime)s stratuxcot %(levelname)s %(name)s.%(funcName)s:%(lineno)d '

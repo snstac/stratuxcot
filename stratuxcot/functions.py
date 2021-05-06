@@ -6,16 +6,16 @@
 import datetime
 import os
 
-import pycot
+import xml.etree.ElementTree
 
 import stratuxcot.constants
 
 __author__ = "Greg Albrecht W2GMD <oss@undef.net>"
-__copyright__ = "Copyright 2020 Orion Labs, Inc."
+__copyright__ = "Copyright 2021 Orion Labs, Inc."
 __license__ = "Apache License, Version 2.0"
 
 
-#
+# Sample JSON data:
 #
 # {
 #  'Icao_addr': 11160165,
@@ -116,7 +116,7 @@ def icao_int_to_hex(addr) -> str:
 
 
 def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many-locals
-                   classifier: any = None) -> pycot.Event:
+                   classifier: any = None) -> str:
     """
     Transforms Stratux Websocket Messages to a Cursor-on-Target PLI Events.
     """
@@ -141,107 +141,70 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
     emitter_category = msg.get("Emitter_category")
     cot_type = classifier(icao_hex, emitter_category, flight)
 
-    point = pycot.Point()
-    point.lat = lat
-    point.lon = lon
+    point = xml.etree.ElementTree.Element("point")
+    point.set("lat", str(lat))
+    point.set("lon", str(lon))
 
     if msg.get("OnGround"):
-        point.hae = "9999999.0"
-        point.ce = 51.56 + int(msg.get("NACp"))
-        point.le = 12.5 + int(msg.get("NACp"))
+        point.set("hae", "9999999.0")
+        point.set("ce", str(51.56 + int(msg.get("NACp"))))
+        point.set("le", str(12.5 + int(msg.get("NACp"))))
     else:
-        point.ce = 56.57 + int(msg.get("NACp"))
-        point.le = 12.5 + int(msg.get("NACp"))
+        point.set("ce", str(56.57 + int(msg.get("NACp"))))
+        point.set("le", str(12.5 + int(msg.get("NACp"))))
         alt = int(msg.get("Alt", 0))
         if alt:
-            point.hae = alt * 0.3048
+            point.set("hae", str(alt * 0.3048))
         else:
-            point.hae = "9999999.0"
+            point.set("hae", "9999999.0")
 
-    uid = pycot.UID()
-    uid.Droid = name
+    uid = xml.etree.ElementTree.Element("UID")
+    uid.set("Droid", name)
 
-    contact = pycot.Contact()
-    contact.callsign = callsign
-    # Not supported by FTS 1.1?
-    # if flight:
-    #    contact.hostname = f'https://flightaware.com/live/flight/{flight}'
+    contact = xml.etree.ElementTree.Element("contact")
+    contact.set("callsign", str(callsign))
 
-    track = pycot.Track()
-    track.course = msg.get('Track', '9999999.0')
+    track = xml.etree.ElementTree.Element("track")
+    track.set("course", str(msg.get("Track", "9999999.0")))
 
     # gs: ground speed in knots
     gs = int(msg.get('Speed', 0))
     if gs:
-        track.speed = gs * 0.514444
+        track.set("speed", str(sgs * 0.514444))
     else:
-        track.speed = '9999999.0'
+        track.set("speed", "9999999.0")
 
-    remarks = pycot.Remarks()
+    detail = xml.etree.ElementTree.Element("detail")
+    detail.set("uid", name)
+    detail.append(uid)
+    detail.append(contact)
+    detail.append(track)
+
+    remarks = xml.etree.ElementTree.Element("remarks")
+
     _remarks = f"Squawk: {msg.get('Squawk')} Category: {emitter_category}"
     if flight:
         _remarks = f"{icao_hex}({flight}) {_remarks}"
     else:
         _remarks = f"{icao_hex} {_remarks}"
 
-    if bool(os.environ.get('DEBUG')):
+    if bool(os.getenv("DEBUG")):
         _remarks = f"{_remarks} via stratuxcot"
 
-    remarks.value = _remarks
+    detail.set("remarks", _remark)
+    remarks.text = _remark
+    detail.append(remarks)
 
-    detail = pycot.Detail()
-    detail.uid = uid
-    detail.contact = contact
-    detail.track = track
-    detail.remarks = remarks
+    root = xml.etree.ElementTree.Element("event")
+    root.set("version", "2.0")
+    root.set("type", cot_type)
+    root.set("uid", name)
+    root.set("how", "m-g")
+    root.set("time", time.strftime(pytak.ISO_8601_UTC))
+    root.set("start", time.strftime(pytak.ISO_8601_UTC))
+    root.set("stale", (time + datetime.timedelta(seconds=int(cot_stale))).strftime(pytak.ISO_8601_UTC))
+    root.append(point)
+    root.append(detail)
 
-    event = pycot.Event()
-    event.version = "2.0"
-    event.event_type = cot_type
-    event.uid = name
-    event.time = time
-    event.start = time
-    event.stale = time + datetime.timedelta(seconds=stale)
-    event.how = "m-g"
-    event.point = point
-    event.detail = detail
+    return xml.etree.ElementTree.tostring(root)
 
-    return event
-
-
-def hello_event():
-    time = datetime.datetime.now(datetime.timezone.utc)
-    name = 'stratuxcot'
-    callsign = 'stratuxcot'
-
-    point = pycot.Point()
-    point.lat = '9999999.0'
-    point.lon = '9999999.0'
-
-    # FIXME: These values are static, should be dynamic.
-    point.ce = '9999999.0'
-    point.le = '9999999.0'
-    point.hae = '9999999.0'
-
-    uid = pycot.UID()
-    uid.Droid = name
-
-    contact = pycot.Contact()
-    contact.callsign = callsign
-
-    detail = pycot.Detail()
-    detail.uid = uid
-    detail.contact = contact
-
-    event = pycot.Event()
-    event.version = '2.0'
-    event.event_type = 'a-u-G'
-    event.uid = name
-    event.time = time
-    event.start = time
-    event.stale = time + datetime.timedelta(hours=1)
-    event.how = 'h-g-i-g-o'
-    event.point = point
-    event.detail = detail
-
-    return event

@@ -21,7 +21,7 @@ else:
     from asyncio import _get_running_loop as get_running_loop
 
 __author__ = "Greg Albrecht W2GMD <oss@undef.net>"
-__copyright__ = "Copyright 2020 Orion Labs, Inc."
+__copyright__ = "Copyright 2021 Orion Labs, Inc."
 __license__ = "Apache License, Version 2.0"
 
 
@@ -44,7 +44,7 @@ async def main(opts):
     )
     message_worker.url = stratux_ws
 
-    await tx_queue.put(stratuxcot.hello_event())
+    await tx_queue.put(pytak.hello_event("stratuxcot"))
 
     done, pending = await asyncio.wait(
         set([message_worker.run(), read_worker.run(), write_worker.run()]),
@@ -67,17 +67,14 @@ def cli():
         '-W', '--stratux_ws', help='Stratux Websocket URL.',
         required=True
     )
+    parser.add_argument(
+        '-S', '--cot_stale', help='CoT Stale period, in seconds.', type=int
+    )
 
-    parser.add_argument(
-        '-S', '--cot_stale', help='CoT Stale period, in seconds',
-    )
-    parser.add_argument(
-        '-K', '--fts_token', help='FTS REST API Token'
-    )
     opts = parser.parse_args()
 
     if sys.version_info[:2] >= (3, 7):
-        asyncio.run(main(opts), debug=bool(os.environ.get('DEBUG')))
+        asyncio.run(main(opts), debug=bool(os.getenv("DEBUG")))
     else:
         loop = asyncio.get_event_loop()
         try:
@@ -86,5 +83,5 @@ def cli():
             loop.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

@@ -12,14 +12,13 @@ import time
 import urllib
 import websockets
 
-import pycot
 import pytak
 
 import stratuxcot
 
 
 __author__ = "Greg Albrecht W2GMD <oss@undef.net>"
-__copyright__ = "Copyright 2020 Orion Labs, Inc."
+__copyright__ = "Copyright 2021 Orion Labs, Inc."
 __license__ = "Apache License, Version 2.0"
 
 
@@ -34,7 +33,7 @@ class StratuxWorker(pytak.MessageWorker):
     async def handle_message(self, msg: dict) -> None:
         """Processes Stratux Message"""
 
-        event: pycot.Event = self.cot_renderer(
+        event: str = self.cot_renderer(
             msg,
             stale=self.cot_stale,
             classifier=self.cot_classifier
