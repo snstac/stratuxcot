@@ -12,16 +12,13 @@
 
 all: develop
 
-install_requirements:
-	pip install -r requirements.txt
-
 install_requirements_test:
 		pip install -r requirements_test.txt
 
-develop: remember
+develop:
 	python setup.py develop
 
-install: remember
+install:
 	python setup.py install
 
 uninstall:
@@ -29,35 +26,23 @@ uninstall:
 
 reinstall: uninstall install
 
-remember:
-	@echo
-	@echo "Hello from the Makefile..."
-	@echo "Don't forget to run: 'make install_requirements'"
-	@echo
-
-remember_test:
-	@echo
-	@echo "Hello from the Makefile..."
-	@echo "Don't forget to run: 'make install_requirements_test'"
-	@echo
-
 clean:
 	@rm -rf *.egg* build dist *.py[oc] */*.py[co] cover doctest_pypi.cfg \
 		nosetests.xml pylint.log output.xml flake8.log tests.log \
-		test-result.xml htmlcov fab.log .coverage
+		test-result.xml htmlcov fab.log .coverage */__pycache__
 
 publish:
 	python setup.py register sdist upload
 
 
 pep8: remember_test
-	flake8 --max-complexity 12 --exit-zero *.py stratuxcot/*.py tests/*.py
+	flake8 --max-complexity 12 --exit-zero *.py stratuxcot/*.py
 
 flake8: pep8
 
 lint: remember_test
 	pylint --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" \
-		-r n *.py stratuxcot/*.py tests/*.py || exit 0
+		-r n *.py stratuxcot/*.py || exit 0
 
 pylint: lint
 

@@ -121,7 +121,7 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
     Transforms Stratux Websocket Messages to a Cursor-on-Target PLI Events.
     """
     time = datetime.datetime.now(datetime.timezone.utc)
-    stale = stale or stratuxcot.DEFAULT_EVENT_STALE
+    cot_stale = stale or stratuxcot.DEFAULT_EVENT_STALE
 
     lat = msg.get("Lat")
     lon = msg.get("Lng")
