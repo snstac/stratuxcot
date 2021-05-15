@@ -134,7 +134,8 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
     flight = msg.get('Tail', '').strip()
     if flight:
           callsign = flight
-   # else: callsign = Reg (computed US registry "N-number")
+   #  else: callsign = Reg (computed US registry "N-number")
+   #     *** Just place the "computeed" registry in the Remarks...leave Callsign as ICAO hex or Flight ID
     else:
         callsign = icao_hex
 
@@ -148,31 +149,35 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
 
     if msg.get("OnGround"):    # OnGround=true means vehicle is on the ground
         point.hae = "9999999.0"
-        point.ce = 51.56 + int(msg.get("NACp"))
+        point.ce = 51.56 + int(msg.get("NACp"))  # NACp has to be looked up from a table, the value is an index that referes to various ranges of meters...not actually meters.
         point.le = 12.5 + int(msg.get("NACp"))
     else:
         point.ce = 56.57 + int(msg.get("NACp"))
         point.le = 12.5 + int(msg.get("NACp"))
-        alt = int(msg.get("Alt", 0))  
-            # Pressure altitude, feet  when "AltIsGNSS" is 0 #
-            #this needs to be expanded to calculate GNSS Altitude to use in CoT, 
+        alt = int(msg.get("Alt", 0))     # change to alt_hae = int(msg.get("Last_GnssDiffAlt' + 'GnssDiffFromBaroAlt), 0))   ---- or something like this
+            # TODO:  Pressure altitude, feet  when "AltIsGNSS" is 0 #
+            # this needs to be expanded to calculate GNSS Altitude to use in CoT, 
             # see "GnssDiffFromBaroAlt" and "Last_GnssDiffAlt" to compute GNSS altitude Last_GnssDiffAlt+GnssDiffFromBaroAlt=GNSS ALT (restrict update to resonable length of time: 
             # Last_GnssDiff    time.Time // Time of last GnssDiffFromBaroAlt update (stratuxClock).)
             # cot must have altitude in meters HAE (WGS84 ellipsoid)
+            #
+            # MUST do math:  'Last_GnssDiffAlt' + 'GnssDiffFromBaroAlt' = alt_hae
+            #                      ensure the Last_GnssDiff "time" is short from the overal message time to keep it relevant....some lat/long updates may not change alt_hae and sometimes just the alt_hae may upate
             # ADS-B altitude transformations to becom CoT:   GNSS/geometric altitude MSL (geoid) --> feet HAE --> meters HAE
-        if alt:
-            point.hae = alt * 0.3048   # converts feet to meters
+        if alt: # if alt_hae
+            point.hae = alt * 0.3048   # converts feet to meters   ---->  point.hae = alt_hae * 0.3048
         else:
             point.hae = "9999999.0"
 
     uid = pycot.UID()
-    uid.Droid = name
+    uid.Droid = name  # this is not necessary for 2525 or iconsets
 
     contact = pycot.Contact()
     contact.callsign = callsign
     # Not supported by FTS 1.1?   # how does this work?
-    # if flight: 
-    #    contact.hostname = f'https://globe.adsbexchange.com/?icao={icao_hex}'
+    ## if flight: 
+    ##   contact.hostname = f'https://globe.adsbexchange.com/?icao={icao_hex}'  # TODO:  Add "~" to leading position of icao_hex in the URL to get a match at the moment: 
+                                                                                #      example:   https://globe.adsbexchange.com/?icao=~2f8b82
 
     track = pycot.Track()
     track.course = msg.get('Track', '9999999')
@@ -182,10 +187,12 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
     if gs:
         track.speed = gs * 0.514444    # converts knots to meters per second m/s
     else:
-        track.speed = '9999999.0'
+        track.speed = '9999999.0'      
 
     remarks = pycot.Remarks()
-    _remarks = f"Squawk: {msg.get('Squawk')} Category: {emitter_category}"
+    _remarks = f"Squawk: {msg.get('Squawk')} Category: {emitter_category}  ADSB Type: {TargetTypeValue}"   
+        ## add table of GDL90 Emiiter Catagories that StratuX provides to the associated DO-260B that someone would see in adsbexchange
+        ## Change Category to ---->    Category: {DO260B_emitter_categroy}
     if flight:
         _remarks = f"{icao_hex}({flight}) {_remarks}"
     else:
