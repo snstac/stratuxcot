@@ -139,6 +139,8 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
     else:
         callsign = icao_hex
 
+    calc_registry = msg.get('Reg', '').strip()    
+    
     # Figure out appropriate CoT Type:
     emitter_category = msg.get("Emitter_category")
     cot_type = classifier(icao_hex, emitter_category, flight)
@@ -190,9 +192,10 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
         track.speed = '9999999.0'      
 
     remarks = pycot.Remarks()
-    _remarks = f"Squawk: {msg.get('Squawk')} Category: {emitter_category}  ADSB Type: {TargetTypeValue}"   
+    _remarks = f"Squawk: {msg.get('Squawk')} Registry(calc): {calc_registry} Category: {emitter_category}  "   
         ## add table of GDL90 Emiiter Catagories that StratuX provides to the associated DO-260B that someone would see in adsbexchange
         ## Change Category to ---->    Category: {DO260B_emitter_categroy}
+        ## ADD:    ADSB Type: {TargetTypeValue}   from table definitions with plane text
     if flight:
         _remarks = f"{icao_hex}({flight}) {_remarks}"
     else:
