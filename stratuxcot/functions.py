@@ -211,6 +211,8 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
     detail.contact = contact
     detail.track = track
     detail.remarks = remarks
+  # detail.geopointsrc = geopointsource
+  # detail.altsrc = altsrc
 
     event = pycot.Event()
     event.version = "2.0"
