@@ -4,7 +4,7 @@ A1, 1, Light(ICAO)(<15k lbs)
 A2, 2, Small, (15k-75k lbs)
 A3, 3, Large (75k-300k lbs)
 A4, 4, High-Vortex Large (i.e. B757)
-A5, 5, Heavy (>300k lbs)
+A5, 5, Heavy (ICAO) (>300k lbs)
 A6, 6, High Perf (>5g & >400kts)
 A7, 7, Rotorcraft
 B0, 8, NO INFO
