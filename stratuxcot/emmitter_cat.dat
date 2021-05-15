@@ -1,0 +1,33 @@
+DO260B, GDL90, DESCRIPTION
+A0, 0, NO INFO
+A1, 1, Light(ICAO)(<15k lbs)
+A2, 2, Small, (15k-75k lbs)
+A3, 3, Large (75k-300k lbs)
+A4, 4, High-Vortex Large (i.e. B757)
+A5, 5, Heavy (>300k lbs)
+A6, 6, High Perf (>5g & >400kts)
+A7, 7, Rotorcraft
+B0, 8, NO INFO
+B1, 9, Glider/Sailplane
+B2, 10, Lighter-than-Air
+B3, 11, Parachutist/Skydiver
+B4, 12, Ultralight/hang-glider/paraglider
+B5, 13, Reserved
+B6, 14, Drone/UAS
+B7, 15, Space/Trans-atmospheric vehicle
+C0, 16, NO INFO
+C1, 17, Surface Vehicle-Emergency Vehicle
+C2, 18, Surface Vehicle-Service Vehicle
+C3, 19, Point Obstacle (incld. tethered ballons)
+C4, 20, Cluster Obstacle
+C5, 21, Line Obstacle
+C6, 22, Reserved
+C7, 23, Reserved
+D0, 24, NO INFO
+D1, 25, Reserved
+D2, 26, Reserved
+D3, 27, Reserved
+D4, 28, Reserved
+D5, 29, Reserved
+D6, 30, Reserved
+D7, 31, Reserved
