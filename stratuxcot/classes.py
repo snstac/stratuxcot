@@ -89,7 +89,7 @@ class StratuxWorker(pytak.MessageWorker):
             self._logger.debug("Empty CoT Event")
             return
 
-        icao = stratuxcot.icao_int_to_hex(msg.get("Icao_addr"))
+        icao = aircot.icao_int_to_hex(msg.get("Icao_addr"))
         self._logger.debug(
             "Handling ICAO: %s Flight: %s ", icao, msg.get("Tail"))
 
