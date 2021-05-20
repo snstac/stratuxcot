@@ -6,7 +6,7 @@ stratuxcot - Stratux Cursor-on-Target Gateway.
    :target: https://github.com/ampledata/stratuxcot/blob/main/docs/screenshot-1604561447.png
 
 
-The stratuxcot Stratux Cursor on Target Gateway transforms Stratux aircraft
+The Stratux Cursor on Target Gateway transforms Stratux aircraft
 position information into Cursor on Target (CoT) Position Location Information
 (PLI) for display on Situational Awareness (SA) applications such as the
 Android Team Awareness Kit (ATAK), WinTAK, RaptorX, et al.
@@ -21,10 +21,16 @@ Installation
 ============
 
 The Stratux to Cursor on Target Gateway is provided by a command-line tool
-called `stratuxcot`, which can be installed either from the Python Package
-Index, or directly from this source tree.
+called `stratuxcot`, which can be installed several ways.
 
-Install from the Python Package Index (PyPI)::
+Installing as a Debian/Ubuntu Package::
+
+    $ wget https://github.com/ampledata/aircot/releases/latest/download/python3-aircot_latest_all.deb
+    $ sudo apt install -f ./python3-aircot_latest_all.deb
+    $ wget https://github.com/ampledata/stratuxcot/releases/latest/download/python3-stratuxcot_latest_all.deb
+    $ sudo apt install -f ./python3-stratuxcot_latest_all.deb
+
+Install from the Python Package Index::
 
     $ pip install stratuxcot
 
@@ -32,8 +38,8 @@ Install from the Python Package Index (PyPI)::
 Install from this source tree::
 
     $ git clone https://github.com/ampledata/stratuxcot.git
-    $ cd stratuxcot/
-    $ python setup.py install
+    $ cd aircot/
+    $ python setup.py stratuxcot
 
 
 Usage
@@ -42,31 +48,27 @@ Usage
 The `stratuxcot` command-line program has several runtime arguments::
 
     $ stratuxcot -h
-    usage: stratuxcot [-h] -U COT_URL -W STRATUX_WS [-S COT_STALE] [-K FTS_TOKEN]
+    usage: stratuxcot [-h] [-c CONFIG_FILE] [-d] [-U COT_URL] [-W STRATUX_WS] [-S COT_STALE] [-F FILTER_CONFIG] [-K KNOWN_CRAFT]
 
     optional arguments:
       -h, --help            show this help message and exit
-      -U COT_URL, --cot_url COT_URL
-                            URL to CoT Destination.
-      -W STRATUX_WS, --stratux_ws STRATUX_WS
+      -c CONFIG_FILE, --CONFIG_FILE CONFIG_FILE
+      -d, --DEBUG           Enable DEBUG logging
+      -U COT_URL, --COT_URL COT_URL
+                            URL to CoT Destination. Must be a URL, e.g. tcp:1.2.3.4:1234 or tls:...:1234, etc.
+      -W STRATUX_WS, --STRATUX_WS STRATUX_WS
                             Stratux Websocket URL.
-      -S COT_STALE, --cot_stale COT_STALE
-                            CoT Stale period, in seconds.
-      -K FTS_TOKEN, --fts_token FTS_TOKEN
-                            FTS REST API Token
+      -S COT_STALE, --COT_STALE COT_STALE
+                            CoT Stale period, in seconds
+      -F FILTER_CONFIG, --FILTER_CONFIG FILTER_CONFIG
+                            FILTER_CONFIG
+      -K KNOWN_CRAFT, --KNOWN_CRAFT KNOWN_CRAFT
+                            KNOWN_CRAFT
 
 Troubleshooting
 ===============
 
 To report bugs, please set the DEBUG=1 environment variable to collect logs.
-
-Unit Test/Build Status
-======================
-
-stratuxcot's current unit test and build status is available via Travis CI:
-
-.. image:: https://travis-ci.com/ampledata/stratuxcot.svg?branch=master
-    :target: https://travis-ci.com/ampledata/stratuxcot
 
 Source
 ======

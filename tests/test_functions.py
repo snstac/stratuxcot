@@ -3,126 +3,251 @@
 
 """ADS-B Cursor-on-Target Gateway Function Tests."""
 
-import unittest
+import asyncio
+import csv
+import io
+import urllib
+import xml.etree.ElementTree
+
+import pytest
 
 import stratuxcot
 
+import stratuxcot.functions
+
+
 __author__ = 'Greg Albrecht W2GMD <oss@undef.net>'
-__copyright__ = 'Copyright 2020 Orion Labs, Inc.'
+__copyright__ = 'Copyright 2021 Orion Labs, Inc.'
 __license__ = 'Apache License, Version 2.0'
 
 
-TEST_DUMP1090_FEED = {
-    'aircraft': [
-        {
-            'alt_baro': 3700,
-            'alt_geom': 3750,
-            'category': 'A1',
-            'flight': 'N739UL  ',
-            'geom_rate': 512,
-            'gs': 79.5,
-            'gva': 2,
-            'hex': 'a9ee47',
-            'lat': 37.836449,
-            'lon': -122.030281,
-            'messages': 34,
-            'mlat': [],
-            'nac_p': 10,
-            'nac_v': 2,
-            'nic': 9,
-            'nic_baro': 0,
-            'rc': 75,
-            'rssi': -15.8,
-            'sda': 2,
-            'seen': 0.2,
-            'seen_pos': 1.0,
-            'sil': 3,
-            'sil_type': 'perhour',
-            'tisb': [],
-            'track': 50.1,
-            'version': 2
-        }, {
-            'alt_baro': 37000,
-            'alt_geom': 38650,
-            'baro_rate': 0,
-            'gs': 487.6,
-            'hex': '3c4586',
-            'messages': 10,
-            'mlat': [],
-            'nac_v': 1,
-            'rssi': -18.2,
-            'seen': 17.0,
-            'tisb': [],
-            'track': 171.3,
-            'version': 0
-        }, {
-            'alt_baro': 39000,
-            'hex': 'a18b41',
-            'lat': 39.455023,
-            'lon': -120.402344,
-            'messages': 17,
-            'mlat': [],
-            'nac_p': 10,
-            'nav_altitude_mcp': 39008,
-            'nav_modes': ['autopilot', 'vnav', 'tcas'],
-            'nav_qnh': 1013.6,
-            'nic': 8,
-            'nic_baro': 1,
-            'rc': 186,
-            'rssi': -18.9,
-            'seen': 3.2,
-            'seen_pos': 12.6,
-            'sil': 3,
-            'sil_type': 'unknown',
-            'squawk': '3514',
-            'tisb': [],
-            'version': 0
-        }, {
-            'alt_baro': 17650,
-            'alt_geom': 18650,
-            'baro_rate': -2112,
-            'category': 'A3',
-            'flight': 'SWA1241 ',
-            'gs': 353.4,
-            'hex': 'abd994',
-            'messages': 14,
-            'mlat': [],
-            'nac_p': 8,
-            'nac_v': 1,
-            'nav_altitude_mcp': 3392,
-            'nav_heading': 308.0,
-            'nav_qnh': 1013.6,
-            'nic_baro': 1,
-            'rssi': -18.1,
-            'seen': 16.7,
-            'sil': 2,
-            'sil_type': 'unknown',
-            'tisb': [],
-            'track': 321.1,
-            'version': 0
-        }
-    ],
-    'messages': 1799595081,
-    'now': 1602849987.1
-}
+# Sample JSON data:
+#
+# {
+#  'Icao_addr': 11160165,
+#  'Reg': 'N762QS',
+#  'Tail': 'N762QS',
+#  'Squawk': 0,
+#  'Lat': 37.89692,
+#  'Lng': -122.74547,
+#  'Addr_type': 0,
+#  'Age': 28.29,
+#  'AgeLastAlt': 1.33,
+#  'Alt': 21850,
+#  'AltIsGNSS': False,
+#  'Bearing': 0,
+#  'BearingDist_valid': False,
+#  'Distance': 0,
+#  'Emitter_category': 0,
+#  'ExtrapolatedPosition': False,
+#  'GnssDiffFromBaroAlt': -275,
+#  'LastSent': '0001-01-01T00:39:16.44Z',
+#  'Last_GnssDiff': '0001-01-01T00:39:53.84Z',
+#  'Last_GnssDiffAlt': 21775,
+#  'Last_alt': '0001-01-01T00:39:54.77Z',
+#  'Last_seen': '0001-01-01T00:39:54.77Z',
+#  'Last_source': 1,
+#  'Last_speed': '0001-01-01T00:39:53.84Z',
+#  'NACp': 10,
+#  'NIC': 8,
+#  'OnGround': False,
+#  'Position_valid': True,
+#  'PriorityStatus': 0,
+#  'SignalLevel': -28.21023052706831,
+#  'Speed': 340,
+#  'Speed_valid': True,
+#  'TargetType': 1,
+#  'Timestamp': '2020-11-06T19:58:06.234Z',
+#  'Track': 249,
+#  'Vvel': 3392
+#  }
+#
+
+#
+# "Last_seen":"0001-01-01T00:43:19.61Z"  (ws://192.168.10.1/traffic)   0001-01-01 is day zero,
+# +
+# "GPSTime":"2020-05-12T08:27:10Z" (http://192.168.10.1/getSituation)
+# -
+# ("Uptime":2610230,ms)"UptimeClock":"0001-01-01T00:43:30.23Z" (http://192.168.10.1/getStatus)
+# = Timestamp of traffic "event"
+#
+
+#
+# This is an illuminated/commented version of the traffic output from StratuX:
+# type TrafficInfo struct {
+# Icao_addr          uint32   // decimal version of (ICAO HEX or ICAO OCTAL)
+# Reg                string   // Registration. Calculated from Icao_addr for civil aircraft of US registry.
+# Tail               string   // Callsign. Transmitted by aircraft. 8 Characters max including spaces
+# Emitter_category   uint8    // Formatted using GDL90 standard 3.5.1.10 Table 11, e.g. in a Mode ES report, A7 becomes 0x07, B0 becomes 0x08, etc.
+# OnGround           bool     // Air-ground status. On-ground is "true".
+# Addr_type          uint8    // UAT address qualifier. Used by GDL90 format, so translations for ES TIS-B/ADS-R are needed. 3.5.1.2 Target Identity
+# (GDL90 ICD)
+# TargetType         uint8    // types decribed in const above https://github.com/cyoung/stratux/blob/master/main/traffic.go#L66
+# SignalLevel        float64  // Signal level, dB RSSI.
+# Squawk             int      // Squawk code
+# Position_valid     bool     // false = MODE-S message without location data
+# Lat                float32  // decimal degrees, north positive
+# Lng                float32  // decimal degrees, east positive
+# Alt                int32    // Pressure altitude, feet
+# GnssDiffFromBaroAlt int32    // GNSS altitude above WGS84 datum. Reported in TC 20-22 messages (negative = below BaroAlt, smaller magnitude)
+# AltIsGNSS          bool     // Pressure alt = 0; GNSS alt = 1
+# NIC                int      // Navigation Integrity Category.
+# NACp               int      // Navigation Accuracy Category for Position.
+# Track              uint16   // degrees true
+# Speed              uint16   // knots
+# Speed_valid        bool     // set when speed report received.
+# Vvel               int16    // feet per minute
+# Timestamp          time.Time // timestamp of traffic message, UTC
+# PriorityStatus     uint8    // Emergency or priority code as defined in GDL90 spec, DO-260B (Type 28 msg) and DO-282B
+# // Parameters starting at 'Age' are calculated from last message receipt on each call of sendTrafficUpdates().
+# // Mode S transmits position and track in separate messages, and altitude can also be
+# // received from interrogations.
+# Age                 float64  // Age of last valid position fix, seconds ago.
+# AgeLastAlt          float64  // Age of last altitude message, seconds ago.
+# Last_seen           time.Time // Time of last position update (stratuxClock). Used for timing out expired data.
+# Last_alt            time.Time // Time of last altitude update (stratuxClock).
+# Last_GnssDiff       time.Time // Time of last GnssDiffFromBaroAlt update (stratuxClock).
+# Last_GnssDiffAlt    int32    // Altitude at last GnssDiffFromBaroAlt update.
+# Last_speed          time.Time // Time of last velocity and track update (stratuxClock).
+# Last_source         uint8    // Last frequency on which this target was received.
+# ExtrapolatedPosition bool     //TODO: True if Stratux is "coasting" the target from last known position.
+# BearingDist_valid   bool     // set when bearing and distance information is valid
+# Bearing             float64  // Bearing in degrees true to traffic from ownship, if it can be calculated. Units: degrees.
+# Distance            float64  // Distance to traffic from ownship, if it can be calculated. Units: meters.
+# //FIXME: Rename variables for consistency, especially "Last_".
+#
 
 
-class FunctionsTestCase(unittest.TestCase):
-    """
-    Test class for functions... functions.
-    """
+@pytest.fixture
+def sample_craft():
+    return {
+        "Icao_addr":10698088,
+        "Reg":"N308DU",
+        "Tail":"DAL1352",
+        "Emitter_category":3,
+        "OnGround": False,
+        "Addr_type":0,
+        "TargetType":1,
+        "SignalLevel":-35.5129368009492,
+        "Squawk":3105,
+        "Position_valid":True,
+        "Lat":37.46306,
+        "Lng":-122.264626,
+        "Alt":7325,
+        "GnssDiffFromBaroAlt":25,
+        "AltIsGNSS":False,
+        "NIC":8,
+        "NACp":10,
+        "Track":135,
+        "Speed":262,
+        "Speed_valid":True,
+        "Vvel":-1600,
+        "Timestamp":"2021-05-19T23:13:18.484Z",
+        "PriorityStatus":0,
+        "Age":29.85,
+        "AgeLastAlt":29.83,
+        "Last_seen":"0001-01-01T16:43:24.75Z",
+        "Last_alt":"0001-01-01T16:43:24.77Z",
+        "Last_GnssDiff":"0001-01-01T16:43:24.54Z",
+        "Last_GnssDiffAlt":7700,
+        "Last_speed":"0001-01-01T16:43:24.54Z",
+        "Last_source":1,
+        "ExtrapolatedPosition":False,
+        "BearingDist_valid":True,
+        "Bearing":148.05441175901748,
+        "Distance":38889.68863349082,
+        "LastSent":"0001-01-01T16:43:22.85Z"
+    }
 
-    def test_adsb_to_cot(self):
-        """
-        Tests that adsb_to_cot decodes ADS-B into a Cursor-on-Target
-        message.
-        """
-        aircraft = TEST_DUMP1090_FEED['aircraft']
-        craft = aircraft[0]
-        cot_msg = stratuxcot.functions.adsb_to_cot(craft)
-        self.assertEqual(cot_msg.event_type, 'a-n-A-C-F')
-        self.assertEqual(cot_msg.uid, 'ICAO24.a9ee47')
+
+@pytest.fixture
+def sample_known_craft():
+    sample_csv = """DOMAIN,AGENCY,REG,CALLSIGN,TYPE,MODEL,HEX,COT,TYPE,,
+EMS,CALSTAR,N832CS,CALSTAR7,HELICOPTER,,,a-f-A-C-H,HELICOPTER,,
+EMS,REACH AIR MEDICAL,N313RX,REACH16,HELICOPTER,,,a-f-A-C-H,HELICOPTER,,
+FED,USCG,1339,C1339,FIXED WING,,,,FIXED WING,,
+FIRE,USFS,N143Z,JUMPR43,FIXED WING,DH6,,a-f-A-C-F,FIXED WING,,
+FIRE,,N17085,TNKR_911,FIXED WING,,,a-f-A-C-F,FIXED WING,,
+FIRE,CAL FIRE,N481DF,C_104,HELICOPTER,,,a-f-A-C-H,HELICOPTER,,
+FOOD,EL FAROLITO,N739UL,TACO_01,HELICOPTER,,,a-f-A-T-A-C-O,HELICOPTER,,
+FOOD,EL FAROLITO,DAL1352,TACO_02,FIXED WING,,,a-f-A-T-A-C-O,FIXED WING,,
+"""
+    csv_fd = io.StringIO(sample_csv)
+    all_rows = []
+    reader = csv.DictReader(csv_fd)
+    for row in reader:
+        all_rows.append(row)
+    print(all_rows)
+    return all_rows
 
 
-if __name__ == '__main__':
-    unittest.main()
+
+def test_stratux_to_cot_raw(sample_craft):
+    print(sample_craft)
+    cot = stratuxcot.functions.stratux_to_cot_raw(sample_craft)
+    print(cot)
+    assert isinstance(cot, xml.etree.ElementTree.Element)
+    assert cot.tag == "event"
+    assert cot.attrib["version"] == "2.0"
+    assert cot.attrib["type"] == "a-.-A-C-F"
+    assert cot.attrib["uid"] == "ICAO-A33D68"
+
+    point = cot.findall("point")
+    assert point[0].tag == "point"
+    assert point[0].attrib["lat"] == "37.46306"
+    assert point[0].attrib["lon"] == "-122.264626"
+    assert point[0].attrib["hae"] == "2232.6600000000003"
+
+    detail = cot.findall("detail")
+    assert detail[0].tag == "detail"
+    assert detail[0].attrib["uid"] == "ICAO-A33D68"
+
+    track = detail[0].findall("track")
+    assert track[0].attrib["course"] == "135"
+    assert track[0].attrib["speed"] == "134.78432800000002"
+
+
+def test_stratux_to_cot(sample_craft):
+    cot = stratuxcot.stratux_to_cot(sample_craft)
+    assert isinstance(cot, bytes)
+    assert b"a-.-A-C-F" in cot
+    assert b"DAL1352" in cot
+    assert b"ICAO-A33D68" in cot
+    assert b'speed="134.78432800000002"' in cot
+
+
+def test_stratux_to_cot_raw_with_known_craft(sample_craft, sample_known_craft):
+    known_craft_key = "REG"
+    filter_key = sample_craft["Tail"].strip().upper()
+
+    known_craft = (list(filter(
+        lambda x: x[known_craft_key].strip().upper() == filter_key, sample_known_craft)) or
+                   [{}])[0]
+
+    cot = stratuxcot.functions.stratux_to_cot_raw(sample_craft, known_craft=known_craft)
+
+    assert isinstance(cot, xml.etree.ElementTree.Element)
+    assert cot.tag == "event"
+    assert cot.attrib["version"] == "2.0"
+    assert cot.attrib["type"] == "a-f-A-T-A-C-O"
+    assert cot.attrib["uid"] == "ICAO-A33D68"
+
+    point = cot.findall("point")
+    assert point[0].tag == "point"
+    assert point[0].attrib["lat"] == "37.46306"
+    assert point[0].attrib["lon"] == "-122.264626"
+    assert point[0].attrib["hae"] == "2232.6600000000003"
+
+    detail = cot.findall("detail")
+    assert detail[0].tag == "detail"
+    assert detail[0].attrib["uid"] == "TACO_02"
+
+    track = detail[0].findall("track")
+    assert track[0].attrib["course"] == "135"
+    assert track[0].attrib["speed"] == "134.78432800000002"
+
+
+def test_negative_stratux_to_cot():
+    sample_craft = {"taco": "burrito"}
+    cot = stratuxcot.stratux_to_cot(sample_craft)
+    assert cot == None

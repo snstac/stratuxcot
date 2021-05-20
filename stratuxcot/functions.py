@@ -5,8 +5,11 @@
 
 import datetime
 import os
+import platform
+
 import xml.etree.ElementTree
 
+import aircot
 import pytak
 
 import stratuxcot.constants
@@ -16,148 +19,35 @@ __copyright__ = "Copyright 2021 Orion Labs, Inc."
 __license__ = "Apache License, Version 2.0"
 
 
-# Sample JSON data:
-#
-# {
-#  'Icao_addr': 11160165,
-#  'Reg': 'N762QS',
-#  'Tail': 'N762QS',
-#  'Squawk': 0,
-#  'Lat': 37.89692,
-#  'Lng': -122.74547,
-#  'Addr_type': 0,
-#  'Age': 28.29,
-#  'AgeLastAlt': 1.33,
-#  'Alt': 21850,
-#  'AltIsGNSS': False,
-#  'Bearing': 0,
-#  'BearingDist_valid': False,
-#  'Distance': 0,
-#  'Emitter_category': 0,
-#  'ExtrapolatedPosition': False,
-#  'GnssDiffFromBaroAlt': -275,
-#  'LastSent': '0001-01-01T00:39:16.44Z',
-#  'Last_GnssDiff': '0001-01-01T00:39:53.84Z',
-#  'Last_GnssDiffAlt': 21775,
-#  'Last_alt': '0001-01-01T00:39:54.77Z',
-#  'Last_seen': '0001-01-01T00:39:54.77Z',
-#  'Last_source': 1,
-#  'Last_speed': '0001-01-01T00:39:53.84Z',
-#  'NACp': 10,
-#  'NIC': 8,
-#  'OnGround': False,
-#  'Position_valid': True,
-#  'PriorityStatus': 0,
-#  'SignalLevel': -28.21023052706831,
-#  'Speed': 340,
-#  'Speed_valid': True,
-#  'TargetType': 1,
-#  'Timestamp': '2020-11-06T19:58:06.234Z',
-#  'Track': 249,
-#  'Vvel': 3392
-#  }
-#
-
-#
-# "Last_seen":"0001-01-01T00:43:19.61Z"  (ws://192.168.10.1/traffic)   0001-01-01 is day zero,
-# +
-# "GPSTime":"2020-05-12T08:27:10Z" (http://192.168.10.1/getSituation)
-# -
-# ("Uptime":2610230,ms)"UptimeClock":"0001-01-01T00:43:30.23Z" (http://192.168.10.1/getStatus)
-# = Timestamp of traffic "event"
-#
-
-#
-# This is an illuminated/commented version of the traffic output from StratuX:
-# type TrafficInfo struct {
-# Icao_addr          uint32   // decimal version of (ICAO HEX or ICAO OCTAL)
-# Reg                string   // Registration. Calculated from Icao_addr for civil aircraft of US registry.
-# Tail               string   // Callsign. Transmitted by aircraft. 8 Characters max including spaces
-# Emitter_category   uint8    // Formatted using GDL90 standard 3.5.1.10 Table 11, e.g. in a Mode ES report, A7 becomes 0x07, B0 becomes 0x08, etc.
-# OnGround           bool     // Air-ground status. On-ground is "true".
-# Addr_type          uint8    // UAT address qualifier. Used by GDL90 format, so translations for ES TIS-B/ADS-R are needed. 3.5.1.2 Target Identity
-# (GDL90 ICD)
-# TargetType         uint8    // types decribed in const above https://github.com/cyoung/stratux/blob/master/main/traffic.go#L66
-# SignalLevel        float64  // Signal level, dB RSSI.
-# Squawk             int      // Squawk code
-# Position_valid     bool     // false = MODE-S message without location data
-# Lat                float32  // decimal degrees, north positive
-# Lng                float32  // decimal degrees, east positive
-# Alt                int32    // Pressure altitude, feet
-# GnssDiffFromBaroAlt int32    // GNSS altitude above WGS84 datum. Reported in TC 20-22 messages (negative = below BaroAlt, smaller magnitude)
-# AltIsGNSS          bool     // Pressure alt = 0; GNSS alt = 1
-# NIC                int      // Navigation Integrity Category.
-# NACp               int      // Navigation Accuracy Category for Position.
-# Track              uint16   // degrees true
-# Speed              uint16   // knots
-# Speed_valid        bool     // set when speed report received.
-# Vvel               int16    // feet per minute
-# Timestamp          time.Time // timestamp of traffic message, UTC
-# PriorityStatus     uint8    // Emergency or priority code as defined in GDL90 spec, DO-260B (Type 28 msg) and DO-282B
-# // Parameters starting at 'Age' are calculated from last message receipt on each call of sendTrafficUpdates().
-# // Mode S transmits position and track in separate messages, and altitude can also be
-# // received from interrogations.
-# Age                 float64  // Age of last valid position fix, seconds ago.
-# AgeLastAlt          float64  // Age of last altitude message, seconds ago.
-# Last_seen           time.Time // Time of last position update (stratuxClock). Used for timing out expired data.
-# Last_alt            time.Time // Time of last altitude update (stratuxClock).
-# Last_GnssDiff       time.Time // Time of last GnssDiffFromBaroAlt update (stratuxClock).
-# Last_GnssDiffAlt    int32    // Altitude at last GnssDiffFromBaroAlt update.
-# Last_speed          time.Time // Time of last velocity and track update (stratuxClock).
-# Last_source         uint8    // Last frequency on which this target was received.
-# ExtrapolatedPosition bool     //TODO: True if Stratux is "coasting" the target from last known position.
-# BearingDist_valid   bool     // set when bearing and distance information is valid
-# Bearing             float64  // Bearing in degrees true to traffic from ownship, if it can be calculated. Units: degrees.
-# Distance            float64  // Distance to traffic from ownship, if it can be calculated. Units: meters.
-# //FIXME: Rename variables for consistency, especially "Last_".
-#
-
-def icao_int_to_hex(addr) -> str:
-    return str(hex(addr)).lstrip('0x').upper()
-
-
-def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many-locals
-                   classifier: any = None) -> str:
+def stratux_to_cot_raw(craft: dict, stale: int = None, known_craft: dict = {}) -> str:  # NOQA pylint: disable=too-many-locals
     """
     Transforms Stratux Websocket Messages to a Cursor-on-Target PLI Events.
     """
     time = datetime.datetime.now(datetime.timezone.utc)
-    cot_stale = stale or stratuxcot.DEFAULT_EVENT_STALE
+    cot_stale = stale or stratuxcot.DEFAULT_COT_STALE
 
-    lat = msg.get("Lat")
-    lon = msg.get("Lng")
-    if lat is None or lon is None:
-        return None
+    icao_hex = aircot.icao_int_to_hex(craft.get("Icao_addr"))
+    flight = craft.get("Tail", "").strip().upper()
+    craft_type: str = craft.get("t", "").strip().upper()
+    reg: str = craft.get("Reg", "").strip().upper()
 
-    icao_hex = icao_int_to_hex(msg.get('Icao_addr'))
-    name = f"ICAO-{icao_hex}"
-
-    flight = msg.get('Tail', '').strip()
-    if flight:
-        callsign = flight
-    else:
-        callsign = icao_hex
-
-    # Figure out appropriate CoT Type:
-    emitter_category = msg.get("Emitter_category")
-    cot_type = classifier(icao_hex, emitter_category, flight)
+    name, callsign = aircot.set_name_callsign(icao_hex, reg, craft_type, flight, known_craft)
+    category = aircot.set_category(craft.get("Emitter_category"), known_craft)
+    cot_type = aircot.set_cot_type(icao_hex, category, flight, known_craft)
+    print(locals())
 
     point = xml.etree.ElementTree.Element("point")
-    point.set("lat", str(lat))
-    point.set("lon", str(lon))
+    point.set("lat", str(craft.get("Lat")))
+    point.set("lon", str(craft.get("Lng")))
 
-    if msg.get("OnGround"):
+    if craft.get("OnGround"):
+        point.set("ce", str(51.56 + int(craft.get("NACp"))))
+        point.set("le", str(12.5 + int(craft.get("NACp"))))
         point.set("hae", "9999999.0")
-        point.set("ce", str(51.56 + int(msg.get("NACp"))))
-        point.set("le", str(12.5 + int(msg.get("NACp"))))
     else:
-        point.set("ce", str(56.57 + int(msg.get("NACp"))))
-        point.set("le", str(12.5 + int(msg.get("NACp"))))
-        alt = int(msg.get("Alt", 0))
-        if alt:
-            point.set("hae", str(alt * 0.3048))
-        else:
-            point.set("hae", "9999999.0")
+        point.set("ce", str(56.57 + int(craft.get("NACp"))))
+        point.set("le", str(12.5 + int(craft.get("NACp"))))
+        point.set("hae", aircot.functions.get_hae(craft.get("Alt")))
 
     uid = xml.etree.ElementTree.Element("UID")
     uid.set("Droid", name)
@@ -166,14 +56,8 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
     contact.set("callsign", str(callsign))
 
     track = xml.etree.ElementTree.Element("track")
-    track.set("course", str(msg.get("Track", "9999999.0")))
-
-    # gs: ground speed in knots
-    gs = int(msg.get('Speed', 0))
-    if gs:
-        track.set("speed", str(gs * 0.514444))
-    else:
-        track.set("speed", "9999999.0")
+    track.set("course", str(craft.get("Track", "9999999.0")))
+    track.set("speed", aircot.functions.get_speed(craft.get("Speed")))
 
     detail = xml.etree.ElementTree.Element("detail")
     detail.set("uid", name)
@@ -183,11 +67,9 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
 
     remarks = xml.etree.ElementTree.Element("remarks")
 
-    _remarks = f"Squawk: {msg.get('Squawk')} Category: {emitter_category}"
-    if flight:
-        _remarks = f"{icao_hex}({flight}) {_remarks}"
-    else:
-        _remarks = f"{icao_hex} {_remarks}"
+    _remarks = (
+        f"{callsign} ICAO: {icao_hex} REG: {reg} Flight: {flight} Type: {craft_type} Squawk: {craft.get('Squawk')} "
+        f"Category: {craft.get('Emitter_category')} (via stratuxcot@{platform.node()})")
 
     if bool(os.getenv("DEBUG")):
         _remarks = f"{_remarks} via stratuxcot"
@@ -199,7 +81,7 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
     root = xml.etree.ElementTree.Element("event")
     root.set("version", "2.0")
     root.set("type", cot_type)
-    root.set("uid", name)
+    root.set("uid", f"ICAO-{icao_hex}")
     root.set("how", "m-g")
     root.set("time", time.strftime(pytak.ISO_8601_UTC))
     root.set("start", time.strftime(pytak.ISO_8601_UTC))
@@ -207,5 +89,11 @@ def stratux_to_cot(msg: dict, stale: int = None, # NOQA pylint: disable=too-many
     root.append(point)
     root.append(detail)
 
-    return xml.etree.ElementTree.tostring(root)
+    return root
+
+
+def stratux_to_cot(craft: dict, stale: int = None, known_craft: dict = {}) -> str:
+    if craft.get("Lat") is None or craft.get("Lng") is None:
+        return None
+    return xml.etree.ElementTree.tostring(stratux_to_cot_raw(craft, stale, known_craft))
 

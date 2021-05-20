@@ -5,7 +5,10 @@
 
 import argparse
 import asyncio
+import collections
 import concurrent
+import configparser
+import logging
 import os
 import sys
 import urllib
@@ -26,22 +29,19 @@ __license__ = "Apache License, Version 2.0"
 
 
 async def main(opts):
-    loop = get_running_loop()
     tx_queue: asyncio.Queue = asyncio.Queue()
     rx_queue: asyncio.Queue = asyncio.Queue()
-    cot_url: urllib.parse.ParseResult = urllib.parse.urlparse(opts.cot_url)
+    cot_url: urllib.parse.ParseResult = urllib.parse.urlparse(opts.get("COT_URL"))
+
     # Create our CoT Event Queue Worker
     reader, writer = await pytak.protocol_factory(cot_url)
     write_worker = pytak.EventTransmitter(tx_queue, writer)
     read_worker = pytak.EventReceiver(rx_queue, reader)
 
     stratux_ws: urllib.parse.ParseResult = urllib.parse.urlparse(
-        opts.stratux_ws)
+        opts.get("STRATUX_WS"))
 
-    message_worker = stratuxcot.StratuxWorker(
-        event_queue=tx_queue,
-        cot_stale=opts.cot_stale
-    )
+    message_worker = stratuxcot.StratuxWorker(tx_queue, opts)
     message_worker.url = stratux_ws
 
     await tx_queue.put(pytak.hello_event("stratuxcot"))
@@ -59,26 +59,78 @@ def cli():
 
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("-c", "--CONFIG_FILE", dest="CONFIG_FILE", default="config.ini", type=str)
     parser.add_argument(
-        '-U', '--cot_url', help='URL to CoT Destination.',
-        required=True
+        "-d", "--DEBUG", dest="DEBUG", default=False, action="store_true", help="Enable DEBUG logging")
+    parser.add_argument(
+        '-U',
+        '--COT_URL',
+        dest="COT_URL",
+        help='URL to CoT Destination. Must be a URL, e.g. tcp:1.2.3.4:1234 or tls:...:1234, etc.'
     )
     parser.add_argument(
-        '-W', '--stratux_ws', help='Stratux Websocket URL.',
-        required=True
+        '-W',
+        '--STRATUX_WS',
+        dest="STRATUX_WS",
+        help='Stratux Websocket URL.'
     )
     parser.add_argument(
-        '-S', '--cot_stale', help='CoT Stale period, in seconds.', type=int
+        '-S',
+        '--COT_STALE',
+        dest="COT_STALE",
+        help='CoT Stale period, in seconds',
+        default=stratuxcot.DEFAULT_COT_STALE
     )
+    parser.add_argument(
+        "-F",
+        '--FILTER_CONFIG',
+        dest="FILTER_CONFIG",
+        help="FILTER_CONFIG",
+    )
+    parser.add_argument(
+        "-K",
+        '--KNOWN_CRAFT',
+        dest="KNOWN_CRAFT",
+        help="KNOWN_CRAFT",
+    )
+    namespace = parser.parse_args()
+    cli_args = {k: v for k, v in vars(namespace).items() if v is not None}
 
-    opts = parser.parse_args()
+    # Read config file:
+    config_file = cli_args.get("CONFIG_FILE")
+    logging.info("Reading configuration from %s", config_file)
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    # Combined command-line args with config file:
+    if "stratuxcot" in config:
+        combined_config = collections.ChainMap(cli_args, os.environ, config["stratuxcot"])
+    else:
+        combined_config = collections.ChainMap(cli_args, os.environ)
+
+    if combined_config.get("FILTER_CONFIG"):
+        filter_config = combined_config.get("FILTER_CONFIG")
+        logging.info("Reading FILTER_CONFIG from %s", filter_config)
+        filters = configparser.ConfigParser()
+        filters.read(filter_config)
+        combined_config = collections.ChainMap(combined_config, {"FILTERS": filters})
+
+    if not combined_config.get("COT_URL"):
+        print("Please specify a CoT Destination URL, for example: '-U tcp:takserver.example.com:8087'")
+        print("See -h for help.")
+        sys.exit(1)
+
+    if not combined_config.get("STRATUX_WS"):
+        print("Please specify a Stratux Websocket URL, for example: '-W ws://192.168.0.2/traffic'")
+        print("See -h for help.")
+        sys.exit(1)
 
     if sys.version_info[:2] >= (3, 7):
-        asyncio.run(main(opts), debug=bool(os.getenv("DEBUG")))
+        asyncio.run(main(combined_config), debug=combined_config.get("DEBUG"))
     else:
         loop = asyncio.get_event_loop()
         try:
-            loop.run_until_complete(main(opts))
+            loop.run_until_complete(main(combined_config))
         finally:
             loop.close()
 
