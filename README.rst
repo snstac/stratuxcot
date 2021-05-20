@@ -27,6 +27,8 @@ Installing as a Debian/Ubuntu Package::
 
     $ wget https://github.com/ampledata/aircot/releases/latest/download/python3-aircot_latest_all.deb
     $ sudo apt install -f ./python3-aircot_latest_all.deb
+    $ wget https://github.com/ampledata/pytak/releases/latest/download/python3-pytak_latest_all.deb
+    $ sudo apt install -f ./python3-pytak_latest_all.deb
     $ wget https://github.com/ampledata/stratuxcot/releases/latest/download/python3-stratuxcot_latest_all.deb
     $ sudo apt install -f ./python3-stratuxcot_latest_all.deb
 
