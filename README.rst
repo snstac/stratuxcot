@@ -17,6 +17,19 @@ For more information on the TAK suite of tools, see: https://www.civtak.org/
 
 For more information on the Stratux Portable ADS-B receiver, see: http://stratux.me/
 
+Support StratuxCoT Development
+==============================
+
+StratuxCoT has been developed for the Disaster Response, Public Safety and Frontline community at-large. This software
+is currently provided at no-cost to our end-users. All development is self-funded and all time-spent is entirely
+voluntary. Any contribution you can make to further these software development efforts, and the mission of StratuxCoT
+to provide ongoing SA capabilities to our end-users, is greatly appreciated:
+
+.. image:: https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png
+    :target: https://www.buymeacoffee.com/ampledata
+    :alt: Support StratuxCoT development: Buy me a coffee!
+
+
 Installation
 ============
 
@@ -40,7 +53,7 @@ Install from the Python Package Index::
 Install from this source tree::
 
     $ git clone https://github.com/ampledata/stratuxcot.git
-    $ cd aircot/
+    $ cd stratuxcot/
     $ python setup.py stratuxcot
 
 
