@@ -39,15 +39,16 @@ setuptools.setup(
     description="Stratux Cursor-on-Target Gateway.",
     author="Greg Albrecht",
     author_email="oss@undef.net",
-    package_data={'': ['LICENSE']},
+    package_data={"": ["LICENSE"]},
     license="Apache License, Version 2.0",
-    long_description=open('README.rst').read(),
+    long_description=open("README.rst").read(),
+    long_description_content_type="text/x-rst",
     zip_safe=False,
     include_package_data=True,
     install_requires=[
-        'pytak',
-        'aircot',
-        'websockets'
+        "pytak",
+        "aircot",
+        "websockets"
     ],
     classifiers=[
         'Topic :: Communications :: Ham Radio',

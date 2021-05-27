@@ -1,9 +1,9 @@
 stratuxcot - Stratux Cursor-on-Target Gateway.
 **********************************************
 
-.. image:: https://raw.githubusercontent.com/ampledata/stratuxcot/main/docs/screenshot-1604561447-25.png
+.. image:: https://raw.githubusercontent.com/ampledata/stratuxcot/main/docs/screenshot_18452.png
    :alt: Screenshot of ADS-B PLI in ATAK.
-   :target: https://github.com/ampledata/stratuxcot/blob/main/docs/screenshot-1604561447.png
+   :target: https://github.com/ampledata/stratuxcot/blob/main/docs/screenshot_18452.png
 
 
 The Stratux Cursor on Target Gateway transforms Stratux aircraft
@@ -47,7 +47,7 @@ Installing as a Debian/Ubuntu Package::
 
 Install from the Python Package Index::
 
-    $ pip install stratuxcot
+    $ python3 -m pip install -U stratuxcot
 
 
 Install from this source tree::
@@ -57,7 +57,9 @@ Install from this source tree::
     $ python setup.py stratuxcot
 
 If you'd like to run `stratuxcot` side-by-side on the Stratux Raspberry Pi, Paul has put together an excellent
-guide: https://github.com/ampledata/stratuxcot/blob/main/docs/Stratux_-_Mobile_Station_Set-up.pdf
+guide:
+
+https://github.com/ampledata/stratuxcot/blob/main/docs/Stratux_-_Mobile_Station_Set-up.pdf
 
 Usage
 =====
