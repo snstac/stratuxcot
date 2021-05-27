@@ -56,8 +56,6 @@ Install from this source tree::
     $ cd stratuxcot/
     $ python setup.py stratuxcot
 
-If you'd like to run `stratuxcot` side-by-side on the Stratux Raspberry Pi, Paul has put together an excellent
-guide: [Stratux+stratuxcot Install Guide](https://github.com/ampledata/stratuxcot/blob/main/docs/Stratux_-_Mobile_Station_Set-up.pdf)
 
 Usage
 =====
