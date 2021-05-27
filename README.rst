@@ -111,9 +111,35 @@ TCP Port 8087 on Host 172.17.2.152::
     $ stratuxcot -U tcp:172.17.2.152:8087 -W ws://172.17.2.188/traffic
 
 
-Running as a Daemon
-===================
-First, install supervisor::
+Running as a Service
+====================
+
+It's recommended to run `stratuxcot` as a service ("daemon") using a built-in service manager like systemd.
+
+To accomplish this, first create the file `/etc/systemd/system/stratuxcot.service`::
+
+     [Unit]
+     Description=StratuxCoT Service
+     After=multi-user.target
+     [Service]
+     ExecStart=/usr/local/bin/stratuxcot -U tcp:x.x.x.x:8088 -W ws://127.0.0.1/traffic
+     Restart=always
+     RestartSec=5
+     Environment=DEBUG=1
+     [Install]
+     WantedBy=multi-user.target
+
+Then, it's as easy as::
+
+    $ sudo systemctl enable stratuxcot.service
+    $ sudo systemctl start stratuxcot.service
+
+To see status & logs::
+
+    $ sudo systemctl status stratuxcot.service
+    $ sudo journalctl -xe
+
+Alternatively, you can use supervisord::
 
     $ sudo yum install supervisor
     $ sudo service supervisord start
