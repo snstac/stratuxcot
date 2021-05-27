@@ -71,9 +71,6 @@ def stratux_to_cot_raw(craft: dict, stale: int = None, known_craft: dict = {}) -
         f"{callsign} ICAO: {icao_hex} REG: {reg} Flight: {flight} Type: {craft_type} Squawk: {craft.get('Squawk')} "
         f"Category: {craft.get('Emitter_category')} (via stratuxcot@{platform.node()})")
 
-    if bool(os.getenv("DEBUG")):
-        _remarks = f"{_remarks} via stratuxcot"
-
     detail.set("remarks", _remarks)
     remarks.text = _remarks
     detail.append(remarks)
