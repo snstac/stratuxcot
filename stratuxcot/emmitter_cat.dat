@@ -1,11 +1,11 @@
 DO260B, GDL90, DESCRIPTION
 A0, 0, No Emitter Category Info
-A1, 1, Light(ICAO)(<15k lbs)
+A1, 1, Light (ICAO) (<15k lbs)
 A2, 2, Small, (≥ 15k to < 75k lbs)
 A3, 3, Large (≥ 75k to < 300k lbs)
 A4, 4, Large & High-Vortex (i.e. B757)
 A5, 5, Heavy (ICAO) (≥ 300k lbs)
-A6, 6, High Perf (> 5g & > 400 knots TAS)
+A6, 6, High Perf (Both: > 5g & > 400 knots TAS)
 A7, 7, Rotorcraft
 B0, 8, NO INFO
 B1, 9, Glider/Sailplane
