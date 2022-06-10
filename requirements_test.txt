@@ -1,11 +1,5 @@
-# Python Distribution Package Requirements for stratuxcot.
-#
-# Source:: https://github.com/ampledata/stratuxcot
-# Author:: Greg Albrecht W2GMD <oss@undef.net>
-# Copyright:: Copyright 2021 Orion Labs, Inc.
-# License:: Apache License, Version 2.0
-
-
-flake8
+pytest-asyncio
+pytest-cov
 pylint
-twine
+flake8
+black

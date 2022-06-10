@@ -1,24 +1,38 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#
+# Copyright 2022 Greg Albrecht <oss@undef.net>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Author:: Greg Albrecht W2GMD <oss@undef.net>
+#
 
-"""ADS-B Cursor-on-Target Gateway Function Tests."""
+"""StratuxCOT Function Tests."""
 
 import asyncio
 import csv
 import io
 import urllib
-import xml.etree.ElementTree
+import xml.etree.ElementTree as ET
 
 import pytest
 
 import stratuxcot
-
 import stratuxcot.functions
 
 
-__author__ = 'Greg Albrecht W2GMD <oss@undef.net>'
-__copyright__ = 'Copyright 2021 Orion Labs, Inc.'
-__license__ = 'Apache License, Version 2.0'
+__author__ = "Greg Albrecht W2GMD <oss@undef.net>"
+__copyright__ = "Copyright 2022 Greg Albrecht"
+__license__ = "Apache License, Version 2.0"
 
 
 # Sample JSON data:
@@ -121,42 +135,42 @@ __license__ = 'Apache License, Version 2.0'
 @pytest.fixture
 def sample_craft():
     return {
-        "Icao_addr":10698088,
-        "Reg":"N308DU",
-        "Tail":"DAL1352",
-        "Emitter_category":3,
+        "Icao_addr": 10698088,
+        "Reg": "N308DU",
+        "Tail": "DAL1352",
+        "Emitter_category": 3,
         "OnGround": False,
-        "Addr_type":0,
-        "TargetType":1,
-        "SignalLevel":-35.5129368009492,
-        "Squawk":3105,
-        "Position_valid":True,
-        "Lat":37.46306,
-        "Lng":-122.264626,
-        "Alt":7325,
-        "GnssDiffFromBaroAlt":25,
-        "AltIsGNSS":False,
-        "NIC":8,
-        "NACp":10,
-        "Track":135,
-        "Speed":262,
-        "Speed_valid":True,
-        "Vvel":-1600,
-        "Timestamp":"2021-05-19T23:13:18.484Z",
-        "PriorityStatus":0,
-        "Age":29.85,
-        "AgeLastAlt":29.83,
-        "Last_seen":"0001-01-01T16:43:24.75Z",
-        "Last_alt":"0001-01-01T16:43:24.77Z",
-        "Last_GnssDiff":"0001-01-01T16:43:24.54Z",
-        "Last_GnssDiffAlt":7700,
-        "Last_speed":"0001-01-01T16:43:24.54Z",
-        "Last_source":1,
-        "ExtrapolatedPosition":False,
-        "BearingDist_valid":True,
-        "Bearing":148.05441175901748,
-        "Distance":38889.68863349082,
-        "LastSent":"0001-01-01T16:43:22.85Z"
+        "Addr_type": 0,
+        "TargetType": 1,
+        "SignalLevel": -35.5129368009492,
+        "Squawk": 3105,
+        "Position_valid": True,
+        "Lat": 37.46306,
+        "Lng": -122.264626,
+        "Alt": 7325,
+        "GnssDiffFromBaroAlt": 25,
+        "AltIsGNSS": False,
+        "NIC": 8,
+        "NACp": 10,
+        "Track": 135,
+        "Speed": 262,
+        "Speed_valid": True,
+        "Vvel": -1600,
+        "Timestamp": "2021-05-19T23:13:18.484Z",
+        "PriorityStatus": 0,
+        "Age": 29.85,
+        "AgeLastAlt": 29.83,
+        "Last_seen": "0001-01-01T16:43:24.75Z",
+        "Last_alt": "0001-01-01T16:43:24.77Z",
+        "Last_GnssDiff": "0001-01-01T16:43:24.54Z",
+        "Last_GnssDiffAlt": 7700,
+        "Last_speed": "0001-01-01T16:43:24.54Z",
+        "Last_source": 1,
+        "ExtrapolatedPosition": False,
+        "BearingDist_valid": True,
+        "Bearing": 148.05441175901748,
+        "Distance": 38889.68863349082,
+        "LastSent": "0001-01-01T16:43:22.85Z",
     }
 
 
@@ -181,15 +195,14 @@ FOOD,EL FAROLITO,DAL1352,TACO_02,FIXED WING,,,a-f-A-T-A-C-O,FIXED WING,,
     return all_rows
 
 
-
-def test_stratux_to_cot_raw(sample_craft):
+def test_stratux_to_cot_xml(sample_craft):
     print(sample_craft)
-    cot = stratuxcot.functions.stratux_to_cot_raw(sample_craft)
+    cot = stratuxcot.functions.stratux_to_cot_xml(sample_craft)
     print(cot)
-    assert isinstance(cot, xml.etree.ElementTree.Element)
+    assert isinstance(cot, ET.Element)
     assert cot.tag == "event"
     assert cot.attrib["version"] == "2.0"
-    assert cot.attrib["type"] == "a-.-A-C-F"
+    assert cot.attrib["type"] == "a-n-A-C"
     assert cot.attrib["uid"] == "ICAO-A33D68"
 
     point = cot.findall("point")
@@ -210,23 +223,29 @@ def test_stratux_to_cot_raw(sample_craft):
 def test_stratux_to_cot(sample_craft):
     cot = stratuxcot.stratux_to_cot(sample_craft)
     assert isinstance(cot, bytes)
-    assert b"a-.-A-C-F" in cot
+    assert b"a-n-A-C" in cot
     assert b"DAL1352" in cot
     assert b"ICAO-A33D68" in cot
     assert b'speed="134.78432800000002"' in cot
 
 
-def test_stratux_to_cot_raw_with_known_craft(sample_craft, sample_known_craft):
+def test_stratux_to_cot_xml_with_known_craft(sample_craft, sample_known_craft):
     known_craft_key = "REG"
     filter_key = sample_craft["Tail"].strip().upper()
 
-    known_craft = (list(filter(
-        lambda x: x[known_craft_key].strip().upper() == filter_key, sample_known_craft)) or
-                   [{}])[0]
+    known_craft = (
+        list(
+            filter(
+                lambda x: x[known_craft_key].strip().upper() == filter_key,
+                sample_known_craft,
+            )
+        )
+        or [{}]
+    )[0]
 
-    cot = stratuxcot.functions.stratux_to_cot_raw(sample_craft, known_craft=known_craft)
+    cot = stratuxcot.functions.stratux_to_cot_xml(sample_craft, known_craft=known_craft)
 
-    assert isinstance(cot, xml.etree.ElementTree.Element)
+    assert isinstance(cot, ET.Element)
     assert cot.tag == "event"
     assert cot.attrib["version"] == "2.0"
     assert cot.attrib["type"] == "a-f-A-T-A-C-O"
@@ -240,7 +259,7 @@ def test_stratux_to_cot_raw_with_known_craft(sample_craft, sample_known_craft):
 
     detail = cot.findall("detail")
     assert detail[0].tag == "detail"
-    assert detail[0].attrib["uid"] == "TACO_02"
+    assert detail[0].attrib["uid"] == "ICAO-A33D68"
 
     track = detail[0].findall("track")
     assert track[0].attrib["course"] == "135"
