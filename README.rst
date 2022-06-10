@@ -1,7 +1,7 @@
 stratuxcot - Stratux Cursor-on-Target Gateway.
 **********************************************
 
-.. image:: https://raw.githubusercontent.com/ampledata/stratuxcot/main/docs/screenshot_18452.png
+.. image:: https://raw.githubusercontent.com/ampledata/stratuxcot/main/docs/screenshot_18452-50.png
    :alt: Screenshot of ADS-B PLI in ATAK.
    :target: https://github.com/ampledata/stratuxcot/blob/main/docs/screenshot_18452.png
 
