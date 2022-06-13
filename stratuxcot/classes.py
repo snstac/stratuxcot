@@ -53,6 +53,9 @@ class StratuxWorker(pytak.QueueWorker):
             self._logger.warning("Empty aircraft `dict`")
             return
 
+        if not data.get("Position_valid", True):
+            return
+
         icao: Union[str, None] = None
         icao_int: str = data.get("Icao_addr", "")
         if icao_int:

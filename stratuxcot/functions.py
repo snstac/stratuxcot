@@ -75,6 +75,7 @@ def stratux_to_cot_xml(  # NOQA pylint: disable=too-many-locals,too-many-branche
     known_craft: dict = known_craft or {}
     config: dict = config or {}
     category = None
+    tisb: bool = False
 
     uid_key = config.get("UID_KEY", "ICAO")
     cot_stale = int(config.get("COT_STALE", pytak.DEFAULT_COT_STALE))
@@ -88,6 +89,7 @@ def stratux_to_cot_xml(  # NOQA pylint: disable=too-many-locals,too-many-branche
     reg: str = craft.get("Reg", "")
     cat: str = str(craft.get("Emitter_category", ""))
     squawk: str = str(craft.get("Squawk", ""))
+    target_type: int = craft.get("TargetType")
 
     if flight:
         flight = flight.strip().upper()
@@ -115,6 +117,25 @@ def stratux_to_cot_xml(  # NOQA pylint: disable=too-many-locals,too-many-branche
         remarks_fields.append(f"Cat.: {category}")
         aircotx.set("cat", category)
 
+    if target_type:
+        aircotx.set("target_type", str(target_type))
+        target_type_name: Union[str, None] = None
+        if target_type == 0:
+            target_type_name = "Mode S"
+        elif target_type == 1:
+            target_type_name = "ADS-B"
+        elif target_type == 2:
+            target_type_name = "ADS-R"
+        elif target_type == 3:
+            target_type_name = "TIS-B S"
+            tisb = True
+        elif target_type == 4:
+            target_type_name = "TIS-B"
+            tisb = True
+        if target_type_name:
+            remarks_fields.append(f"ADS-B Type: {target_type_name}")
+            aircotx.set("target_type_name", target_type_name)
+
     if "REG" in uid_key and reg:
         cot_uid = f"REG-{reg}"
     elif "ICAO" in uid_key and icao_hex:
@@ -139,7 +160,10 @@ def stratux_to_cot_xml(  # NOQA pylint: disable=too-many-locals,too-many-branche
         icao_hex, reg, None, flight, known_craft
     )
 
-    cot_type = aircot.set_cot_type(icao_hex, category, flight, known_craft)
+    if tisb:
+        cot_type = "a-u-A"
+    else:
+        cot_type = aircot.set_cot_type(icao_hex, category, flight, known_craft)
 
     point = ET.Element("point")
     point.set("lat", str(lat))

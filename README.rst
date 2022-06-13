@@ -9,13 +9,12 @@ stratuxcot - Stratux Cursor-on-Target Gateway.
 The Stratux Cursor-On-Target Gateway (StratuxCOT) transforms Stratux aircraft
 position information into Cursor on Target Position Location Information for 
 display on Situational Awareness applications such as the Android Team 
-Awareness Kit (ATAK), WinTAK, RaptorX, et al.
-
-Stratux messages are received via the /traffic Websocket.
-
-For more information on the TAK suite of tools, see: https://www.tak.gov/
+Awareness Kit (ATAK), WinTAK, RaptorX, et al. For more information on the TAK 
+suite of tools, see: https://www.tak.gov/
 
 For more information on the Stratux Portable ADS-B receiver, see: http://stratux.me/
+
+StratuxCOT uses the `Python Team Awareness Kit (PyTAK) <https://github.com/ampledata/pytak>`_ module.
 
 Support Development
 ===================
@@ -80,7 +79,7 @@ a INI-stile configuration file.
 
 Parameters:
 
-* **STRATUX_WS**: Stratux Websocket URL.
+* **STRATUX_WS**: Stratux Websocket URL. Default: ``ws://stratux.local/traffic```
 * **COT_URL**: (*optional*) Destination for Cursor-On-Target messages. See `PyTAK <https://github.com/ampledata/pytak#configuration-parameters>`_ for options.
 * **KNOWN_CRAFT**: (*optional*) CSV-style aircraft hints file for overriding callsign, icon, COT Type, etc.
 * **INCLUDE_ALL_CRAFT**: (*optional*) If set & KNOWN_CRAFT is set, will include aircraft not in KNOWN_CRAFT.
