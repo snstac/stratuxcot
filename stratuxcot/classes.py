@@ -21,7 +21,8 @@
 import asyncio
 import json
 
-from configparser import ConfigParser
+from configparser import SectionProxy
+from typing import Union
 
 import websockets
 
@@ -36,26 +37,38 @@ __license__ = "Apache License, Version 2.0"
 
 
 class StratuxWorker(pytak.QueueWorker):
+    """Connects to Stratux ADS-B WebSocket."""
 
-    """
-    Connects to Stratux ADS-B WebSocket.
-    """
-
-    def __init__(self, queue: asyncio.Queue, config: ConfigParser):
+    def __init__(self, queue: asyncio.Queue, config: SectionProxy) -> None:
         super().__init__(queue, config)
-        _ = [x.setFormatter(stratuxcot.LOG_FORMAT) for x in self._logger.handlers]
-
-        self.known_craft = config.get("KNOWN_CRAFT")
-        self.known_craft_db = None
+        self.known_craft_db: Union[dict, None] = None
 
     async def handle_data(self, data: dict) -> None:
         """Processes Stratux Message"""
-        icao = aircot.icao_int_to_hex(data.get("Icao_addr"))
+        if not isinstance(data, dict):
+            self._logger.warning("Invalid aircraft data, should be a Python `dict`.")
+            return
+
+        if not data:
+            self._logger.warning("Empty aircraft `dict`")
+            return
+
+        icao: Union[str, None] = None
+        icao_int: str = data.get("Icao_addr", "")
+        if icao_int:
+            icao = aircot.icao_int_to_hex(icao_int)
+        else:
+            return
+
+        if icao:
+            icao = icao.strip().upper()
+        else:
+            return
 
         if "~" in icao and not self.config.getboolean("INCLUDE_TISB"):
             return
 
-        known_craft = {}
+        known_craft: Union[dict, None] = None
 
         if self.known_craft_db:
             known_craft = (
@@ -77,7 +90,7 @@ class StratuxWorker(pytak.QueueWorker):
         ):
             return
 
-        event: str = stratuxcot.stratux_to_cot(
+        event: Union[str, None] = stratuxcot.stratux_to_cot(
             data, config=self.config, known_craft=known_craft
         )
 
@@ -85,16 +98,18 @@ class StratuxWorker(pytak.QueueWorker):
             self._logger.debug("Empty COT Event")
             return
 
-        icao = aircot.icao_int_to_hex(data.get("Icao_addr"))
-        self._logger.debug("Handling ICAO: %s Flight: %s ", icao, data.get("Tail"))
-
+        self._logger.debug("Handling ICAO: %s", icao)
         await self.put_queue(event)
 
     async def run(self, number_of_iterations=-1) -> None:
-        url: str = self.config.get("STRATUX_WS")
+        url: str = self.config.get("STRATUX_WS", stratuxcot.DEFAULT_STRATUX_WS)
+
+        if not url or url == "":
+            raise Exception("No STRATUX_WS specified.")
+
         self._logger.info("Running %s for: %s", self.__class__, url)
 
-        known_craft = self.config.get("KNOWN_CRAFT")
+        known_craft: Union[str, None] = self.config.get("KNOWN_CRAFT")
         if known_craft:
             self._logger.info("Using KNOWN_CRAFT: %s", known_craft)
             self.known_craft_db = aircot.read_known_craft(known_craft)

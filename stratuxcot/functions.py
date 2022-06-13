@@ -84,13 +84,10 @@ def stratux_to_cot_xml(  # NOQA pylint: disable=too-many-locals,too-many-branche
     aircotx.set("cot_host_id", cot_host_id)
 
     icao_hex = aircot.icao_int_to_hex(craft.get("Icao_addr"))
-    flight = craft.get("Tail", "")
-    craft_type: str = craft.get("t", "")
+    flight: str = craft.get("Tail", "")
     reg: str = craft.get("Reg", "")
-    cat: str = craft.get("Emitter_category")
-    flight = craft.get("flight", "")
-    cat = craft.get("category")
-    squawk = craft.get("squawk")
+    cat: str = str(craft.get("Emitter_category", ""))
+    squawk: str = str(craft.get("Squawk", ""))
 
     if flight:
         flight = flight.strip().upper()
@@ -118,11 +115,6 @@ def stratux_to_cot_xml(  # NOQA pylint: disable=too-many-locals,too-many-branche
         remarks_fields.append(f"Cat.: {category}")
         aircotx.set("cat", category)
 
-    if craft_type:
-        craft_type = craft_type.strip().upper()
-        remarks_fields.append(f"Type: {craft_type}")
-        aircotx.set("type", craft_type)
-
     if "REG" in uid_key and reg:
         cot_uid = f"REG-{reg}"
     elif "ICAO" in uid_key and icao_hex:
@@ -144,7 +136,7 @@ def stratux_to_cot_xml(  # NOQA pylint: disable=too-many-locals,too-many-branche
         callsign = icao_hex
 
     _, callsign = aircot.set_name_callsign(
-        icao_hex, reg, craft_type, flight, known_craft
+        icao_hex, reg, None, flight, known_craft
     )
 
     cot_type = aircot.set_cot_type(icao_hex, category, flight, known_craft)

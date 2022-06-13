@@ -26,19 +26,8 @@ __copyright__ = "Copyright 2022 Greg Albrecht"
 __license__ = "Apache License, Version 2.0"
 
 
-if bool(os.getenv("DEBUG")):
-    LOG_LEVEL = logging.DEBUG
-    LOG_FORMAT = logging.Formatter(
-        (
-            "%(asctime)s stratuxcot %(levelname)s %(name)s.%(funcName)s:%(lineno)d "
-            " - %(message)s"
-        )
-    )
-    logging.debug("stratuxcot Debugging Enabled via DEBUG Environment Variable.")
-else:
-    LOG_LEVEL = logging.INFO
-    LOG_FORMAT = logging.Formatter(
-        ("%(asctime)s stratuxcot %(levelname)s - %(message)s")
-    )
-
+# Yes, this should be a str not an int because ConfigParser says so.
 DEFAULT_COT_STALE: str = "120"
+
+# Default stratux Websocket URL
+DEFAULT_STRATUX_WS: str = "ws://stratux.local/traffic"

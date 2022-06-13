@@ -202,7 +202,7 @@ def test_stratux_to_cot_xml(sample_craft):
     assert isinstance(cot, ET.Element)
     assert cot.tag == "event"
     assert cot.attrib["version"] == "2.0"
-    assert cot.attrib["type"] == "a-n-A-C"
+    assert cot.attrib["type"] == "a-n-A-C-F"
     assert cot.attrib["uid"] == "ICAO-A33D68"
 
     point = cot.findall("point")
@@ -222,6 +222,7 @@ def test_stratux_to_cot_xml(sample_craft):
 
 def test_stratux_to_cot(sample_craft):
     cot = stratuxcot.stratux_to_cot(sample_craft)
+    print(cot)
     assert isinstance(cot, bytes)
     assert b"a-n-A-C" in cot
     assert b"DAL1352" in cot

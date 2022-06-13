@@ -26,7 +26,7 @@ Stratux Cursor-on-Target Gateway.
 :source: <https://github.com/ampledata/stratuxcot>
 """
 
-from .constants import LOG_FORMAT, LOG_LEVEL, DEFAULT_COT_STALE  # NOQA
+from .constants import DEFAULT_COT_STALE, DEFAULT_STRATUX_WS  # NOQA
 
 from .functions import stratux_to_cot, create_tasks  # NOQA
 
