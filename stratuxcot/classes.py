@@ -43,7 +43,9 @@ class StratuxWorker(pytak.QueueWorker):
         super().__init__(queue, config)
         self.known_craft_db: Union[dict, None] = None
 
-    async def handle_data(self, data: dict) -> None:
+    async def handle_data(  # pylint: disable=too-many-return-statements
+        self, data: dict
+    ) -> None:
         """Processes Stratux Message"""
         if not isinstance(data, dict):
             self._logger.warning("Invalid aircraft data, should be a Python `dict`.")

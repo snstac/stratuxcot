@@ -36,7 +36,7 @@ __license__ = "Apache License, Version 2.0"
 
 def create_tasks(
     config: ConfigParser, clitool: pytak.CLITool
-) -> Set[pytak.Worker,]:
+) -> Set[pytak.Worker, ]:
     """
     Creates specific coroutine task set for this application.
 
@@ -156,9 +156,7 @@ def stratux_to_cot_xml(  # NOQA pylint: disable=too-many-locals,too-many-branche
     else:
         callsign = icao_hex
 
-    _, callsign = aircot.set_name_callsign(
-        icao_hex, reg, None, flight, known_craft
-    )
+    _, callsign = aircot.set_name_callsign(icao_hex, reg, None, flight, known_craft)
 
     if tisb:
         cot_type = "a-u-A"
