@@ -225,4 +225,6 @@ def stratux_to_cot(
 ) -> Union[bytes, None]:
     """Wrapper that returns COT as an XML string."""
     cot: Union[ET.Element, None] = stratux_to_cot_xml(craft, config, known_craft)
-    return ET.tostring(cot) if cot else None
+    return (
+        b"\n".join([pytak.DEFAULT_XML_DECLARATION, ET.tostring(cot)]) if cot else None
+    )
